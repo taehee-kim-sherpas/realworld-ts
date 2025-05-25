@@ -1,6 +1,7 @@
 import slugify from "cjk-slug";
 import type { ArticleRepo } from "../persistence/types";
-import FakeArticleRepo from "../persistence/FakeArticleRepo";
+import createFakeArticleRepo from "../persistence/FakeArticleRepo";
+import { articles } from "../persistence/drizzle/schema";
 
 export interface AppContext {
 	repo: { article: ArticleRepo };
@@ -12,18 +13,17 @@ export interface TestContext extends AppContext {
 	setNow: (date: Date) => void;
 }
 
-export function createFakeContext(): TestContext {
+export function createFakeContext(override: Partial<TestContext>): TestContext {
 	let now = new Date("2024-01-01");
-	const context = {
+	return {
 		getNow: () => now,
 		setNow: (date: Date) => {
 			now = date;
 		},
 		repo: {
-			article: FakeArticleRepo({}),
+			article: createFakeArticleRepo({})
 		},
 		slugify,
+		...override
 	};
-
-	return context;
 }

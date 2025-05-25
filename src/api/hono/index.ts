@@ -4,7 +4,7 @@ import { prettyJSON } from "hono/pretty-json";
 import slugify from "cjk-slug";
 import { simpleRoute } from "./openapiUtils";
 import { describeRoute, openAPISpecs } from "hono-openapi";
-import FakeArticleRepo from "../../persistence/FakeArticleRepo";
+import createFakeArticleRepo from "../../persistence/FakeArticleRepo";
 import {
 	multipleArticlesResponseDto,
 	singleArticleResponseDto,
@@ -38,7 +38,20 @@ export function createApp(ctx: AppContext) {
 
 				const article = createArticle(reqDto.article, ctx);
 
-				await ctx.repo.article.saveBySlug(article.slug, article);
+				const result = await ctx.repo.article.saveBySlug(article.slug, (old) => {
+					if (old){
+						return "already-exist";
+					}
+
+					return article
+				});
+
+				if (result === "already-exist"){
+					return new Response(`CONFLICT: slug ${ctx.slugify(reqDto.article.title)}`, {
+						status: 409
+					})
+				}
+				
 
 				return c.json({ article });
 			},
@@ -54,19 +67,21 @@ export function createApp(ctx: AppContext) {
 				const { slug } = c.req.valid("param");
 				const reqDto = c.req.valid("json");
 
-				const oldArticle = await ctx.repo.article.getBySlug(slug);
+				const result = await ctx.repo.article.saveBySlug(slug, (oldArticle) => {
+					if (oldArticle === undefined){
+						return "not-found";
+					}
 
-				if (oldArticle === undefined) {
-					return new Response(`NOT FOUND: ${c.req.url.toString()}`, {
-						status: 404,
-					});
+					return updateArticle(oldArticle, reqDto.article, ctx)
+				});
+
+				if (result === "not-found"){
+					return new Response(`NOT_FOUND: slug ${slug}`, {
+						status: 404
+					})
 				}
 
-				const article = updateArticle(oldArticle, reqDto.article, ctx);
-
-				await ctx.repo.article.saveBySlug(oldArticle.slug, article);
-
-				return c.json({ article });
+				return c.json({ article: result });
 			},
 		)
 		.get(
@@ -110,12 +125,14 @@ export function createApp(ctx: AppContext) {
 				});
 			},
 		)
-		.notFound(async (c) => {
+
+		app.notFound(async (c) => {
 			return new Response(`NOT FOUND: ${c.req.url.toString()}`, {
 				status: 404,
 			});
 		})
-		.onError((error, c) => {
+
+		app.onError((error, c) => {
 			if (error instanceof Error) {
 				return new Response(error.message, {
 					status: 500,
@@ -172,7 +189,7 @@ export default createApp({
 		return new Date();
 	},
 	repo: {
-		article: FakeArticleRepo({}),
+		article: createFakeArticleRepo({}),
 	},
 	slugify,
 });

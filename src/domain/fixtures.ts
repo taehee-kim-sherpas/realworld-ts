@@ -4,7 +4,7 @@ export const TEST_ARTICLE: Article = {
 	title: "TDD, 테스트 주도 개발",
 	slug: "tdd-테스트-주도-개발",
 	description: "테스트 주도 개발이 무엇인지 배워보자.",
-	body: "레드 그린 리팩토링링",
+	body: "레드 그린 리팩토링",
 	createdAt: new Date("2024-01-01"),
 	updatedAt: new Date("2024-01-01"),
 };

@@ -1,7 +1,7 @@
 import type { Article } from "../domain/articles/Article";
 import type { ArticleRepo } from "./types";
 
-function FakeArticleRepo(initState: Record<string, Article>): ArticleRepo {
+function createFakeArticleRepo(initState: Record<string, Article>): ArticleRepo {
 	const state: Record<string, Article | undefined> = initState;
 
 	return {
@@ -15,9 +15,18 @@ function FakeArticleRepo(initState: Record<string, Article>): ArticleRepo {
 		async list() {
 			return Object.values(state).filter((article) => article !== undefined);
 		},
-		async saveBySlug(slug, article) {
+		async saveBySlug(slug, update) {
+			const old = state[slug];
+			
+			const updated = update(old)
+
+			if(typeof updated === 'string'){
+				return updated;				
+			}
+
 			delete state[slug];
-			state[article.slug] = article;
+			state[updated.slug] = updated;
+			return updated
 		},
 		async deleteBySlug(slug) {
 			delete state[slug];
@@ -25,4 +34,4 @@ function FakeArticleRepo(initState: Record<string, Article>): ArticleRepo {
 	} satisfies ArticleRepo;
 }
 
-export default FakeArticleRepo;
+export default createFakeArticleRepo;
