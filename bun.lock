@@ -15,6 +15,7 @@
         "@valibot/to-json-schema": "^1.2.0",
         "@xstate/test": "^0.5.1",
         "ajv": "^8.17.1",
+        "cjk-slug": "^0.3.1",
         "drizzle-orm": "^0.43.1",
         "edgedb": "^2.0.1",
         "effect": "^3.15.4",
@@ -295,6 +296,8 @@
 
     "chardet": ["chardet@0.7.0", "", {}, "sha512-mT8iDcrh03qDGRRmoA2hmBJnxpllMR+0/0qlzjqZES6NdiWDcZkCNAk4rPFZ9Q85r27unkiNNg8ZOiwZXBHwcA=="],
 
+    "cjk-slug": ["cjk-slug@0.3.1", "", { "dependencies": { "normalize-cjk": "^0.4.0" } }, "sha512-MyFKeZZeJU+IK/f4J+Y70ssmzlY8opG4CMUbbBJx6O2G0KBNx4XfrDGrrz/EQo8359VrDpwLBM8fokQ2jj3siA=="],
+
     "cli-cursor": ["cli-cursor@3.1.0", "", { "dependencies": { "restore-cursor": "^3.1.0" } }, "sha512-I/zHAwsKf9FqGoXM4WWRACob9+SNukZTd94DWF57E4toouRulbCxcUh6RKUEOQlYTHJnzkPMySvPNaaSLNfLZw=="],
 
     "cli-spinners": ["cli-spinners@2.9.2", "", {}, "sha512-ywqV+5MmyL4E7ybXgKys4DugZbX0FC6LnwrhjuykIjnK9k8OQacQ7axGKnjDXWNhns0xot3bZI5h55H8yo9cJg=="],
@@ -516,6 +519,8 @@
     "mute-stream": ["mute-stream@0.0.8", "", {}, "sha512-nnbWWOkoWyUsTjKrhgD0dcz22mdkSnpYqbEjIm2nhwhuxlSkpywJmBo8h0ZqJdkp73mb90SssHkN4rsRaBAfAA=="],
 
     "nanoid": ["nanoid@5.1.5", "", { "bin": { "nanoid": "bin/nanoid.js" } }, "sha512-Ir/+ZpE9fDsNH0hQ3C68uyThDXzYcim2EqcZ8zn8Chtt1iylPT9xXJB0kPCnqzgcEGikO9RxSrh63MsmVCU7Fw=="],
+
+    "normalize-cjk": ["normalize-cjk@0.4.0", "", {}, "sha512-3BgD5wO0/0vrEYEoPdlkxhjnrK+nNo3arosd5PBH1Ywq/TcuO+QSg2wf2LP7Zc2cvKuGIrywmq64tuKwyR3znQ=="],
 
     "object-inspect": ["object-inspect@1.13.4", "", {}, "sha512-W67iLl4J2EXEGTbfeHCffrjDfitvLANg0UlX3wFUUSTx92KXRFegMHUVgSqE+wvhAbi4WqjGg9czysTV2Epbew=="],
 
