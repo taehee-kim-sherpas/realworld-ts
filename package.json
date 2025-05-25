@@ -41,6 +41,8 @@
 	},
 	"scripts": {
 		"prepare": "ts-patch install",
-		"typia:gen": "bun typia generate --input typia --output src/typia --project tsconfig.json"
+		"typia:gen": "bun typia generate --input typia --output src/typia --project tsconfig.json",
+		"test": "bun test",
+		"format": "biome format --write src"
 	}
 }

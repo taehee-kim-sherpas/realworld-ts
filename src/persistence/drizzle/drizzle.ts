@@ -3,5 +3,5 @@ import { drizzle } from "drizzle-orm/bun-sqlite";
 import * as schema from "./schema.ts";
 
 const appDb = drizzle(new Database(":memory:"), {
-		schema,
-	});
+	schema,
+});

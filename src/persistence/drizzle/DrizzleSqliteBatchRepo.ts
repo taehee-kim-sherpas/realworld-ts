@@ -22,8 +22,7 @@ function createDrizzleSqliteArticleRepo(
 
 	return {
 		async getBySlug(slug) {
-			const article = preparedGet
-				.get({ targetSlug: slug });
+			const article = preparedGet.get({ targetSlug: slug });
 			if (article === undefined) {
 				return undefined;
 			}
@@ -37,46 +36,46 @@ function createDrizzleSqliteArticleRepo(
 		async saveBySlug(slug, update) {
 			const old = preparedGet.get({ targetSlug: slug });
 
-			const updated = update(old)
+			const updated = update(old);
 
-			if(typeof updated === 'string'){
-				return updated;				
+			if (typeof updated === "string") {
+				return updated;
 			}
 
-			if(old === undefined){
+			if (old === undefined) {
 				db.insert(schema.articles)
 					.values({
 						title: updated.title,
-	slug: updated.slug,
-	description: updated.description,
-	body: updated.body,
-	//   author: updated.//   author,
-	//   tagList: updated.//   tagList,
-	//   favorited: updated.//   favorited,
-	//   favoritesCount: updated.//   favoritesCount,
-	createdAt: updated.createdAt,
-	updatedAt: updated.updatedAt,
-					}).execute()
+						slug: updated.slug,
+						description: updated.description,
+						body: updated.body,
+						//   author: updated.//   author,
+						//   tagList: updated.//   tagList,
+						//   favorited: updated.//   favorited,
+						//   favoritesCount: updated.//   favoritesCount,
+						createdAt: updated.createdAt,
+						updatedAt: updated.updatedAt,
+					})
+					.execute();
 			} else {
 				db.update(schema.articles)
 					.set({
 						title: updated.title,
-	slug: updated.slug,
-	description: updated.description,
-	body: updated.body,
-	//   author: updated.//   author,
-	//   tagList: updated.//   tagList,
-	//   favorited: updated.//   favorited,
-	//   favoritesCount: updated.//   favoritesCount,
-	createdAt: updated.createdAt,
-	updatedAt: updated.updatedAt,
+						slug: updated.slug,
+						description: updated.description,
+						body: updated.body,
+						//   author: updated.//   author,
+						//   tagList: updated.//   tagList,
+						//   favorited: updated.//   favorited,
+						//   favoritesCount: updated.//   favoritesCount,
+						createdAt: updated.createdAt,
+						updatedAt: updated.updatedAt,
 					})
-				.where(eq(schema.articles.slug, old.slug))
-				.execute()
+					.where(eq(schema.articles.slug, old.slug))
+					.execute();
 			}
 
-			return updated
-			
+			return updated;
 		},
 		async deleteBySlug(slug) {
 			db.delete(schema.articles)

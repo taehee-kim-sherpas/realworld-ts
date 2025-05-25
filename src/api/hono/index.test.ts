@@ -11,11 +11,11 @@ import * as schema from "../../persistence/drizzle/schema.ts";
 describe("hono", () => {
 	const fakeRepoContext = createFakeContext({});
 	const app = createApp(fakeRepoContext);
-	runTestScenario("hono api", createFetchClient(app.request), fakeRepoContext);
+	runTestScenario("hono api - fake repo", createFetchClient(app.request), fakeRepoContext);
 
 	const db = drizzle(new Database(":memory:"), {
-			schema,
-		});
+		schema,
+	});
 
 	db.run(`CREATE TABLE "articles" (
 	"slug" text PRIMARY KEY NOT NULL,
@@ -25,12 +25,16 @@ describe("hono", () => {
 	"createdAt" integer NOT NULL,
 	"updatedAt" integer NOT NULL
 );
-`)
+`);
 	const drizzleRepoContext = createFakeContext({
 		repo: {
-			article: createDrizzleSqliteArticleRepo(db)
-		}
+			article: createDrizzleSqliteArticleRepo(db),
+		},
 	});
 	const drizzleApp = createApp(drizzleRepoContext);
-	runTestScenario("hono api - drizzle sqlite", createFetchClient(drizzleApp.request), drizzleRepoContext);
+	runTestScenario(
+		"hono api - drizzle sqlite",
+		createFetchClient(drizzleApp.request),
+		drizzleRepoContext,
+	);
 });

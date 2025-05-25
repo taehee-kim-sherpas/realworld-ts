@@ -21,9 +21,9 @@ export function createFakeContext(override: Partial<TestContext>): TestContext {
 			now = date;
 		},
 		repo: {
-			article: createFakeArticleRepo({})
+			article: createFakeArticleRepo({}),
 		},
 		slugify,
-		...override
+		...override,
 	};
 }

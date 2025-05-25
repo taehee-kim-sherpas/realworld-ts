@@ -1,7 +1,7 @@
 export type FetchClient = {
-    get: (path: string) => Promise<unknown>;
-    post: (path: string, data: unknown) => Promise<Response>;
-    put: (path: string, data: unknown) => Promise<Response>;
+	get: (path: string) => Promise<unknown>;
+	post: (path: string, data: unknown) => Promise<Response>;
+	put: (path: string, data: unknown) => Promise<Response>;
 	del: (path: string) => Promise<Response>;
 };
 
@@ -32,9 +32,11 @@ export function createFetchClient(
 	) {
 		const res = await fetchImpl(path, {
 			method,
-			headers: data ? {
-				"Content-Type": "application/json",
-			} : undefined,
+			headers: data
+				? {
+						"Content-Type": "application/json",
+					}
+				: undefined,
 			body: data ? JSON.stringify(data) : undefined,
 		});
 
@@ -52,7 +54,6 @@ export function createFetchClient(
 		return request("PUT", path, data);
 	}
 
-
 	async function del(path: string) {
 		return request("DELETE", path);
 	}
@@ -60,6 +61,6 @@ export function createFetchClient(
 		get,
 		post,
 		put,
-		del
-	}
+		del,
+	};
 }

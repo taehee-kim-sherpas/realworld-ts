@@ -38,20 +38,25 @@ export function createApp(ctx: AppContext) {
 
 				const article = createArticle(reqDto.article, ctx);
 
-				const result = await ctx.repo.article.saveBySlug(article.slug, (old) => {
-					if (old){
-						return "already-exist";
-					}
+				const result = await ctx.repo.article.saveBySlug(
+					article.slug,
+					(old) => {
+						if (old) {
+							return "already-exist";
+						}
 
-					return article
-				});
+						return article;
+					},
+				);
 
-				if (result === "already-exist"){
-					return new Response(`CONFLICT: slug ${ctx.slugify(reqDto.article.title)}`, {
-						status: 409
-					})
+				if (result === "already-exist") {
+					return new Response(
+						`CONFLICT: slug ${ctx.slugify(reqDto.article.title)}`,
+						{
+							status: 409,
+						},
+					);
 				}
-				
 
 				return c.json({ article });
 			},
@@ -68,17 +73,17 @@ export function createApp(ctx: AppContext) {
 				const reqDto = c.req.valid("json");
 
 				const result = await ctx.repo.article.saveBySlug(slug, (oldArticle) => {
-					if (oldArticle === undefined){
+					if (oldArticle === undefined) {
 						return "not-found";
 					}
 
-					return updateArticle(oldArticle, reqDto.article, ctx)
+					return updateArticle(oldArticle, reqDto.article, ctx);
 				});
 
-				if (result === "not-found"){
+				if (result === "not-found") {
 					return new Response(`NOT_FOUND: slug ${slug}`, {
-						status: 404
-					})
+						status: 404,
+					});
 				}
 
 				return c.json({ article: result });
@@ -124,25 +129,25 @@ export function createApp(ctx: AppContext) {
 					status: 204,
 				});
 			},
-		)
+		);
 
-		app.notFound(async (c) => {
-			return new Response(`NOT FOUND: ${c.req.url.toString()}`, {
-				status: 404,
-			});
-		})
+	app.notFound(async (c) => {
+		return new Response(`NOT FOUND: ${c.req.url.toString()}`, {
+			status: 404,
+		});
+	});
 
-		app.onError((error, c) => {
-			if (error instanceof Error) {
-				return new Response(error.message, {
-					status: 500,
-				});
-			}
-
-			return new Response(String(error), {
+	app.onError((error, c) => {
+		if (error instanceof Error) {
+			return new Response(error.message, {
 				status: 500,
 			});
+		}
+
+		return new Response(String(error), {
+			status: 500,
 		});
+	});
 
 	app.get(
 		"/openapi.json",
