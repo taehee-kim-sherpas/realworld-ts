@@ -128,7 +128,7 @@ export function createApp(ctx: AppContext) {
 		});
 
 	app.get(
-		"/openapi",
+		"/openapi.json",
 		openAPISpecs(app, {
 			documentation: {
 				info: {
@@ -158,7 +158,7 @@ export function createApp(ctx: AppContext) {
 			},
 		}),
 		async (c) => {
-			return await Bun.file("./src/api/fets/redoc.html").text().then(c.html);
+			return await Bun.file("./redoc.html").text().then(c.html);
 		},
 	);
 

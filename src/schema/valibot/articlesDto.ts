@@ -17,7 +17,7 @@ const articleDto = v.pipe(
 	v.description("게시물"),
 	v.metadata({
 		title: "Article",
-		exmaples: [TEST_ARTICLE],
+		examples: [TEST_ARTICLE],
 	}),
 );
 
@@ -30,7 +30,7 @@ export const updateNewArticleDto = v.pipe(
 	v.description("게시물 생성 혹은 수정"),
 	v.metadata({
 		title: "UpdateNewArticle",
-		exmaples: [CREATE_ARTICLE, UPDATE_ANOTHER_ARTICLE],
+		examples: [CREATE_ARTICLE, UPDATE_ANOTHER_ARTICLE],
 	}),
 );
 
@@ -41,7 +41,7 @@ export const updateNewArticleRequestDto = v.pipe(
 	v.description("게시물 생성 혹은 수정 요청"),
 	v.metadata({
 		title: "UpdateNewArticle",
-		exmaples: [
+		examples: [
 			{
 				articles: CREATE_ARTICLE,
 			},
@@ -59,7 +59,7 @@ export const singleArticleResponseDto = v.pipe(
 	v.description("게시물 하나"),
 	v.metadata({
 		title: "SingleArticleResponse",
-		exmaples: [
+		examples: [
 			{
 				articles: TEST_ARTICLE,
 			},
@@ -74,7 +74,7 @@ export const multipleArticlesResponseDto = v.pipe(
 	v.description("여러 게시물 목록"),
 	v.metadata({
 		title: "MultipleArticlesResponse",
-		exmaples: [
+		examples: [
 			{
 				articles: [TEST_ARTICLE],
 			},
