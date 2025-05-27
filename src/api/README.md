@@ -1,6 +1,6 @@
 - [] Express
 - [] Nest
-- [] Fastify
+- [x] Fastify
 - [x] Elysia
 - [x] Hono
 - [] FeTs

@@ -14,7 +14,7 @@ export function createFetchClient(
 		const res = await fetchImpl(new Request(`http://localhost:3000${path}`));
 
 		if (res.ok) {
-			if (res.headers.get("Content-Type") === "application/json") {
+			if (res.headers.get("Content-Type")?.startsWith("application/json")) {
 				return res.json();
 			}
 
