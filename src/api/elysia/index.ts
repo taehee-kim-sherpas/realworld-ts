@@ -5,6 +5,7 @@ import {
 	MultipleArticlesResponse,
 	SingleArticleResponse,
 } from "../../schema/typebox/articles";
+import swagger from "@elysiajs/swagger";
 import { createArticle, updateArticle } from "../../domain/articles/Article";
 
 class AlreadyExistError extends Error {
@@ -15,6 +16,25 @@ class AlreadyExistError extends Error {
 
 export function createApp(ctx: AppContext) {
 	const app = new Elysia()
+	
+	.use(
+		swagger({
+			path: "/docs",
+		}),
+	)
+	.get("/", () => "Hello Elysia")
+	.get("/redoc", () =>
+		Bun.file("./src/api/elysia/redoc.html")
+			.text()
+			.then(
+				(html) =>
+					new Response(html, {
+						headers: {
+							"Content-Type": "text/html",
+						},
+					}),
+			),
+	)
 		.error({
 			AlreadyExistError,
 		})
