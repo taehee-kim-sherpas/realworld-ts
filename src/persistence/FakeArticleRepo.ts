@@ -8,11 +8,7 @@ function createFakeArticleRepo(
 
 	return {
 		async getBySlug(slug) {
-			const article = state[slug];
-			if (article === undefined) {
-				return undefined;
-			}
-			return article;
+			return state[slug];
 		},
 		async list() {
 			return Object.values(state).filter((article) => article !== undefined);
@@ -31,7 +27,11 @@ function createFakeArticleRepo(
 			return updated;
 		},
 		async deleteBySlug(slug) {
-			delete state[slug];
+			if (state[slug]) {
+				delete state[slug];
+				return "success";
+			}
+			return "not-found";
 		},
 	} satisfies ArticleRepo;
 }

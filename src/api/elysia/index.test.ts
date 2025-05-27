@@ -6,12 +6,10 @@ import { createFakeContext } from "../context.ts";
 import createDrizzleSqliteArticleRepo from "../../persistence/drizzle/DrizzleSqliteArticleRepo.ts";
 import { setupMemoryDb } from "../deps.ts";
 
-describe("hono", () => {
+describe("elysia", () => {
 	const fakeRepoContext = createFakeContext({});
 	const app = createApp(fakeRepoContext);
-	
-	runTestScenario("hono api - fake repo", createFetchClient(app.request), fakeRepoContext);
-
+	runTestScenario("elysia api - fake repo", createFetchClient(app.handle), fakeRepoContext);
 
 	const db = setupMemoryDb();
 	const drizzleRepoContext = createFakeContext({
@@ -21,14 +19,8 @@ describe("hono", () => {
 	});
 	const drizzleApp = createApp(drizzleRepoContext);
 	runTestScenario(
-		"hono api - drizzle sqlite",
-		createFetchClient(drizzleApp.request),
+		"elysia api - drizzle sqlite",
+		createFetchClient(drizzleApp.handle),
 		drizzleRepoContext,
 	);
-
-	// typeOrm
-
-	// ...
-
-	// ...
 });

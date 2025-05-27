@@ -1,32 +1,24 @@
 import { eq } from "drizzle-orm/sql/expressions";
 
 import { sql } from "drizzle-orm";
-import type { ArticleRepo } from "../types";
+import type { ArticleRepo } from "../types.ts";
 import type { BunSQLiteDatabase } from "drizzle-orm/bun-sqlite";
 import * as schema from "./schema.ts";
 
 function createDrizzleSqliteArticleRepo(
 	db: BunSQLiteDatabase<typeof schema>,
 ): ArticleRepo {
-	const preparedAll = db.query.articles
-		.findMany({
-			with: {},
-		})
-		.prepare();
+	const preparedAll = db.query.articles.findMany({}).prepare();
+
 	const preparedGet = db.query.articles
 		.findFirst({
-			with: {},
 			where: eq(schema.articles.slug, sql.placeholder("targetSlug")),
 		})
 		.prepare();
 
 	return {
 		async getBySlug(slug) {
-			const article = preparedGet.get({ targetSlug: slug });
-			if (article === undefined) {
-				return undefined;
-			}
-			return article;
+			return preparedGet.get({ targetSlug: slug });
 		},
 		async list() {
 			const result = preparedAll.all();
@@ -78,9 +70,14 @@ function createDrizzleSqliteArticleRepo(
 			return updated;
 		},
 		async deleteBySlug(slug) {
-			db.delete(schema.articles)
-				.where(eq(schema.articles.slug, slug))
-				.execute();
+			const old = preparedGet.get({ targetSlug: slug });
+			if (old) {
+				db.delete(schema.articles)
+					.where(eq(schema.articles.slug, slug))
+					.execute();
+				return "success";
+			}
+			return "not-found";
 		},
 	} satisfies ArticleRepo;
 }

@@ -115,15 +115,13 @@ export function createApp(ctx: AppContext) {
 			async (c) => {
 				const { slug } = c.req.valid("param");
 
-				const oldArticle = await ctx.repo.article.getBySlug(slug);
+				const result = await ctx.repo.article.deleteBySlug(slug);
 
-				if (oldArticle === undefined) {
+				if(result === 'not-found'){
 					return new Response(`NOT FOUND: ${c.req.url.toString()}`, {
 						status: 404,
 					});
 				}
-
-				await ctx.repo.article.deleteBySlug(oldArticle.slug);
 
 				return new Response("", {
 					status: 204,

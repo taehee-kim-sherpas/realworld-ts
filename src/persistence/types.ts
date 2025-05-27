@@ -9,5 +9,5 @@ export interface ArticleRepo {
 			old: Article | undefined,
 		) => Article | "already-exist" | "not-found",
 	): Promise<Article | "already-exist" | "not-found">;
-	deleteBySlug(slug: Article["slug"]): Promise<void>;
+	deleteBySlug(slug: Article["slug"]): Promise<"success" | "not-found">;
 }
