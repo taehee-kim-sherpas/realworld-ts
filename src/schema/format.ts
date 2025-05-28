@@ -24,55 +24,68 @@ THE SOFTWARE.
 
 ---------------------------------------------------------------------------*/
 
-const TIME = /^(\d\d):(\d\d):(\d\d(?:\.\d+)?)(z|([+-])(\d\d)(?::?(\d\d))?)?$/i
+const TIME = /^(\d\d):(\d\d):(\d\d(?:\.\d+)?)(z|([+-])(\d\d)(?::?(\d\d))?)?$/i;
 
 /**
  * `[ajv-formats]` ISO8601 Time component
  * @example `20:20:39+00:00`
  */
 export function IsTime(value: string, strictTimeZone?: boolean): boolean {
-  const matches: string[] | null = TIME.exec(value)
-  if (!matches) return false
-  const hr: number = +matches[1]
-  const min: number = +matches[2]
-  const sec: number = +matches[3]
-  const tz: string | undefined = matches[4]
-  const tzSign: number = matches[5] === '-' ? -1 : 1
-  const tzH: number = +(matches[6] || 0)
-  const tzM: number = +(matches[7] || 0)
-  if (tzH > 23 || tzM > 59 || (strictTimeZone && !tz)) return false
-  if (hr <= 23 && min <= 59 && sec < 60) return true
-  const utcMin = min - tzM * tzSign
-  const utcHr = hr - tzH * tzSign - (utcMin < 0 ? 1 : 0)
-  return (utcHr === 23 || utcHr === -1) && (utcMin === 59 || utcMin === -1) && sec < 61
+	const matches: string[] | null = TIME.exec(value);
+	if (!matches) return false;
+	const hr: number = +matches[1];
+	const min: number = +matches[2];
+	const sec: number = +matches[3];
+	const tz: string | undefined = matches[4];
+	const tzSign: number = matches[5] === "-" ? -1 : 1;
+	const tzH: number = +(matches[6] || 0);
+	const tzM: number = +(matches[7] || 0);
+	if (tzH > 23 || tzM > 59 || (strictTimeZone && !tz)) return false;
+	if (hr <= 23 && min <= 59 && sec < 60) return true;
+	const utcMin = min - tzM * tzSign;
+	const utcHr = hr - tzH * tzSign - (utcMin < 0 ? 1 : 0);
+	return (
+		(utcHr === 23 || utcHr === -1) &&
+		(utcMin === 59 || utcMin === -1) &&
+		sec < 61
+	);
 }
 
-const DAYS = [0, 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31]
-const DATE = /^(\d\d\d\d)-(\d\d)-(\d\d)$/
+const DAYS = [0, 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
+const DATE = /^(\d\d\d\d)-(\d\d)-(\d\d)$/;
 
 function IsLeapYear(year: number): boolean {
-  return year % 4 === 0 && (year % 100 !== 0 || year % 400 === 0)
+	return year % 4 === 0 && (year % 100 !== 0 || year % 400 === 0);
 }
 /**
  * `[ajv-formats]` ISO8601 Date component
  * @example `2020-12-12`
  */
 export function IsDate(value: string): boolean {
-  const matches: string[] | null = DATE.exec(value)
-  if (!matches) return false
-  const year: number = +matches[1]
-  const month: number = +matches[2]
-  const day: number = +matches[3]
-  return month >= 1 && month <= 12 && day >= 1 && day <= (month === 2 && IsLeapYear(year) ? 29 : DAYS[month])
+	const matches: string[] | null = DATE.exec(value);
+	if (!matches) return false;
+	const year: number = +matches[1];
+	const month: number = +matches[2];
+	const day: number = +matches[3];
+	return (
+		month >= 1 &&
+		month <= 12 &&
+		day >= 1 &&
+		day <= (month === 2 && IsLeapYear(year) ? 29 : DAYS[month])
+	);
 }
 
-const DATE_TIME_SEPARATOR = /t|\s/i
+const DATE_TIME_SEPARATOR = /t|\s/i;
 
 /**
  * `[ajv-formats]` ISO8601 DateTime
  * @example `2020-12-12T20:20:40+00:00`
  */
 export function IsDateTime(value: string, strictTimeZone?: boolean): boolean {
-  const dateTime: string[] = value.split(DATE_TIME_SEPARATOR)
-  return dateTime.length === 2 && IsDate(dateTime[0]) && IsTime(dateTime[1], strictTimeZone)
+	const dateTime: string[] = value.split(DATE_TIME_SEPARATOR);
+	return (
+		dateTime.length === 2 &&
+		IsDate(dateTime[0]) &&
+		IsTime(dateTime[1], strictTimeZone)
+	);
 }

@@ -15,50 +15,51 @@ class AlreadyExistError extends Error {
 }
 
 export function createApp(ctx: AppContext) {
-  const app = new Elysia()
-    .use(
-      swagger({
-        path: "/docs",
-      })
-    )
-    .get("/", () => "Hello Elysia")
-    .get("/redoc", () =>
-      Bun.file("./src/api/elysia/redoc.html")
-        .text()
-        .then(
-          (html) =>
-            new Response(html, {
-              headers: {
-                "Content-Type": "text/html",
-              },
-            })
-        )
-    )
-    .error({
-      AlreadyExistError,
-    })
-    .onError(({ code, error }) => {
-      switch (code) {
-        case "AlreadyExistError":
-          return new Response(`CONFLICT: ${error.message}`, {
-            status: 409,
-          });
-      }
-    })
-    .get(
-      "/api/articles",
-      async () => {
-        const articles = await ctx.repo.article.list();
-        return { articles };
-      },
-      {
-        response: MultipleArticlesResponse,
-      }
-    )
-    .post(
-      "/api/articles",
-      async ({ body }) => {
-        const article = createArticle(body.article, ctx);
+	const app = new Elysia()
+
+		.use(
+			swagger({
+				path: "/docs",
+			}),
+		)
+		.get("/", () => "Hello Elysia")
+		.get("/redoc", () =>
+			Bun.file("./src/api/elysia/redoc.html")
+				.text()
+				.then(
+					(html) =>
+						new Response(html, {
+							headers: {
+								"Content-Type": "text/html",
+							},
+						}),
+				),
+		)
+		.error({
+			AlreadyExistError,
+		})
+		.onError(({ code, error }) => {
+			switch (code) {
+				case "AlreadyExistError":
+					return new Response(`CONFLICT: ${error.message}`, {
+						status: 409,
+					});
+			}
+		})
+		.get(
+			"/api/articles",
+			async () => {
+				const articles = await ctx.repo.article.list();
+				return { articles };
+			},
+			{
+				response: MultipleArticlesResponse,
+			},
+		)
+		.post(
+			"/api/articles",
+			async ({ body }) => {
+				const article = createArticle(body.article, ctx);
 
         const result = await ctx.repo.article.saveBySlug(
           article.slug,

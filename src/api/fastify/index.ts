@@ -4,18 +4,18 @@ import {
 	TypeBoxValidatorCompiler,
 } from "@fastify/type-provider-typebox";
 import Fastify from "fastify";
-import {registerArticles} from "./articles.ts";
+import { registerArticles } from "./articles.ts";
 import swagger from "@fastify/swagger";
 import swaggerUi from "@fastify/swagger-ui";
 import { createFakeContext, type AppContext } from "../context";
 
-export function createFastify(ctx: AppContext){
+export function createFastify(ctx: AppContext) {
 	return Fastify({
-	logger: false,
-})
-	.setValidatorCompiler(TypeBoxValidatorCompiler)
-	.withTypeProvider<TypeBoxTypeProvider>()
-	.register(registerArticles(ctx), { prefix: "/api/articles" })
+		logger: false,
+	})
+		.setValidatorCompiler(TypeBoxValidatorCompiler)
+		.withTypeProvider<TypeBoxTypeProvider>()
+		.register(registerArticles(ctx), { prefix: "/api/articles" });
 }
 
 const fakeRepoContext = createFakeContext({});
@@ -66,7 +66,6 @@ fastify.get(
 		},
 	},
 	async (request, reply) => {
-
 		return { hello: "test" };
 	},
 );

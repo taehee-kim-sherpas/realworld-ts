@@ -6,7 +6,7 @@ test("setup", () => {
   expect(1 + 1).toBe(2);
 });
 
-runTest("elysia", (ctx) => {
+runTest("elysia", async (ctx) => {
   const app = createApp(ctx);
 
   return {

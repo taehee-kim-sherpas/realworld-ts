@@ -151,7 +151,7 @@ export function registerArticles(ctx: AppContext) {
 				},
 				async (request, reply) => {
 					const slug = request.params.slug;
-					
+
 					const result = await ctx.repo.article.deleteBySlug(slug);
 
 					if (result === "not-found") {

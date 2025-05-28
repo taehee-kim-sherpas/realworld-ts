@@ -5,4 +5,4 @@ import { setupTestServer } from "./testServer";
 test("setup", () => {
   expect(1 + 1).toBe(2);
 });
-runTest("Express", (ctx) => setupTestServer(ctx));
+runTest("Express", async (ctx) => setupTestServer(ctx));

@@ -6,9 +6,7 @@ export type FetchClient = {
 };
 
 export function createFetchClient(
-	fetchImpl: (
-		request: Request
-	) => Promise<Response> | Response,
+	fetchImpl: (request: Request) => Promise<Response> | Response,
 ): FetchClient {
 	async function get(path: string) {
 		const res = await fetchImpl(new Request(`http://localhost:3000${path}`));
@@ -29,15 +27,17 @@ export function createFetchClient(
 		path: string,
 		data?: unknown,
 	) {
-		const res = await fetchImpl(new Request(`http://localhost:3000${path}`, {
-			method,
-			headers: data
-				? {
-						"Content-Type": "application/json",
-					}
-				: undefined,
-			body: data ? JSON.stringify(data) : undefined,
-		}));
+		const res = await fetchImpl(
+			new Request(`http://localhost:3000${path}`, {
+				method,
+				headers: data
+					? {
+							"Content-Type": "application/json",
+						}
+					: undefined,
+				body: data ? JSON.stringify(data) : undefined,
+			}),
+		);
 
 		if (res.ok) {
 			return res;

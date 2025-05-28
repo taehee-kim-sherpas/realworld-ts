@@ -18,13 +18,13 @@ const Article = t.Object({
 });
 
 export const SingleArticleResponse = t.Object({
-    article: Article
-})
+	article: Article,
+});
 
 export const CreateUpdateArticleRequestBody = t.Object({
-	article: t.Pick(Article, ["title", "description", "body"])
-})
+	article: t.Pick(Article, ["title", "description", "body"]),
+});
 
 export const MultipleArticlesResponse = t.Object({
-    articles: t.Array(Article)
-})
+	articles: t.Array(Article),
+});

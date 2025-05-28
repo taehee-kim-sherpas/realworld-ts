@@ -117,7 +117,7 @@ export function createApp(ctx: AppContext) {
 
 				const result = await ctx.repo.article.deleteBySlug(slug);
 
-				if(result === 'not-found'){
+				if (result === "not-found") {
 					return new Response(`NOT FOUND: ${c.req.url.toString()}`, {
 						status: 404,
 					});
