@@ -12,6 +12,8 @@
 		"jsx": "preserve",
 		"allowSyntheticDefaultImports": true,
 		"forceConsistentCasingInFileNames": true,
+		"emitDecoratorMetadata": true,
+		"experimentalDecorators": true,
 		"allowJs": false,
 		"noEmit": true,
 		"types": [

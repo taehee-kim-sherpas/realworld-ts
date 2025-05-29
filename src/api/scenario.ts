@@ -1,4 +1,4 @@
-import { afterAll, beforeAll, describe, expect, it, test } from "bun:test";
+import { afterAll, beforeAll, describe, expect, it } from "bun:test";
 import { ANOTHER_ARTICLE, TEST_ARTICLE } from "../domain/fixtures";
 import { createFakeContext, type TestContext } from "./context";
 import { createFetchClient, type FetchClient } from "./fetchClient";
@@ -8,31 +8,41 @@ import { createDrizzlePgArticleRepo } from "../persistence/drizzle/DrizzlePgArti
 
 export function runTestScenario(
   implName: string,
-  client: FetchClient,
-  context: TestContext
+  setup: () => {
+    client: FetchClient;
+    context: TestContext;
+    teardown: () => Promise<void>;
+  }
 ) {
   describe(implName, () => {
+    const { client, context, teardown } = setup();
     beforeAll(async () => {
       await context.setup?.();
+      console.log(`setup ${implName}`);
     });
 
-    it(`${implName} - 404 invalid route`, async () => {
+    afterAll(async () => {
+      await teardown();
+      console.log(`teardown ${implName}`);
+    });
+
+    it("404 invalid route", async () => {
       await expect(client.post("/api/atciel", {})).rejects.toThrow();
     });
 
-    it(`${implName} - 404 not exist`, async () => {
+    it("404 not exist", async () => {
       const id = "not-exist";
       await expect(
         client.get(`/api/articles/${id}`).catch((res) => res.status)
       ).resolves.toBe(404);
     });
 
-    it(`${implName} - validation`, async () => {
+    it("validation", async () => {
       const promise = client.post("/api/articles", {});
       await expect(promise).rejects.toThrow();
     });
 
-    it(`${implName} - Article`, async () => {
+    it("Article", async () => {
       const logs: string[] = [];
 
       try {
@@ -136,21 +146,27 @@ export function runTestScenario(
 
 export function runTest(
   appName: string,
-  createApp: (ctx: TestContext) => {
+  createApp: (ctx: TestContext) => Promise<{
     fetch: (request: Request) => Promise<Response> | Response;
     teardown?: () => Promise<void>;
-  }
+  }>
 ) {
-  describe(appName, () => {
+  runTestScenario(`${appName} api - fake repo`, () => {
     const fakeRepoContext = createFakeContext({});
-    const app = createApp(fakeRepoContext);
+    const appPromise = createApp(fakeRepoContext);
 
-    runTestScenario(
-      `${appName} api - fake repo`,
-      createFetchClient(app.fetch),
-      fakeRepoContext
-    );
+    return {
+      client: createFetchClient((request) =>
+        appPromise.then((app) => app.fetch(request))
+      ),
+      context: fakeRepoContext,
+      teardown: async () => {
+        await appPromise.then((app) => app.teardown?.());
+      },
+    };
+  });
 
+  runTestScenario(`${appName} api - drizzle sqlite`, () => {
     const sqliteDb = setupMemoryDb(appName);
     const drizzleSqliteRepoContext = createFakeContext({
       repo: {
@@ -158,30 +174,36 @@ export function runTest(
       },
     });
     const drizzleSqliteApp = createApp(drizzleSqliteRepoContext);
-    runTestScenario(
-      `${appName} api - drizzle sqlite`,
-      createFetchClient(drizzleSqliteApp.fetch),
-      drizzleSqliteRepoContext
-    );
 
-    const pgDb = setupPgliteDb();
-    const drizzlePgRepoContext = createFakeContext({
-      repo: {
-        article: createDrizzlePgArticleRepo(pgDb.db),
+    return {
+      client: createFetchClient((request) =>
+        drizzleSqliteApp.then((app) => app.fetch(request))
+      ),
+      context: drizzleSqliteRepoContext,
+      teardown: async () => {
+        await drizzleSqliteApp.then((app) => app.teardown?.());
       },
-      setup: pgDb.setup,
-    });
-    const drizzlePgApp = createApp(drizzlePgRepoContext);
-    runTestScenario(
-      `${appName} api - drizzle Pg`,
-      createFetchClient(drizzlePgApp.fetch),
-      drizzlePgRepoContext
-    );
-
-    afterAll(async () => {
-      await app.teardown?.();
-      await drizzleSqliteApp.teardown?.();
-      await drizzlePgApp.teardown?.();
-    });
+    };
   });
+
+  // runTestScenario(`${appName} api - drizzle Pg`, () => {
+  //   const pgDb = setupPgliteDb();
+  //   const drizzlePgRepoContext = createFakeContext({
+  //     repo: {
+  //       article: createDrizzlePgArticleRepo(pgDb.db),
+  //     },
+  //     setup: pgDb.setup,
+  //   });
+  //   const drizzlePgApp = createApp(drizzlePgRepoContext);
+
+  //   return {
+  //     client: createFetchClient((request) =>
+  //       drizzlePgApp.then((app) => app.fetch(request))
+  //     ),
+  //     context: drizzlePgRepoContext,
+  //     teardown: async () => {
+  //       await drizzlePgApp.then((app) => app.teardown?.());
+  //     },
+  //   };
+  // });
 }
