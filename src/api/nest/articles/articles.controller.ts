@@ -11,8 +11,8 @@ import {
   ConflictException,
   HttpCode,
 } from "@nestjs/common";
-import type { Static } from "@sinclair/typebox";
-import type {
+import * as t from "@sinclair/typebox";
+import {
   CreateUpdateArticleRequestBody,
   MultipleArticlesResponse,
   SingleArticleResponse,
@@ -23,6 +23,7 @@ import {
   type Article,
 } from "../../../domain/articles/Article";
 import type { AppContext } from "../../context";
+import { Validate } from 'nestjs-typebox';
 
 @Controller("api/articles")
 export class ArticlesController {
@@ -30,15 +31,20 @@ export class ArticlesController {
   private ctx!: AppContext;
 
   @Get()
-  async findAll(): Promise<Static<typeof MultipleArticlesResponse>> {
+  async findAll(): Promise<t.Static<typeof MultipleArticlesResponse>> {
     const articles = await this.ctx.repo.article.list();
     return { articles };
   }
 
   @Get(":slug")
+  @Validate({
+      request: [
+        { name: 'slug', type: 'param', schema: t.String() },
+      ],
+  })
   async findOne(
     @Param("slug") slug: string
-  ): Promise<Static<typeof SingleArticleResponse>> {
+  ): Promise<t.Static<typeof SingleArticleResponse>> {
     const article = await this.ctx.repo.article.getBySlug(slug);
     if (!article) {
       throw new NotFoundException("NOT_FOUND");
@@ -47,10 +53,14 @@ export class ArticlesController {
   }
 
   @Post()
+  @Validate({
+    request: [
+      { name: 'body', type: 'body', schema: CreateUpdateArticleRequestBody },
+    ],
+  })
   async create(
-    @Body() body: Static<typeof CreateUpdateArticleRequestBody>
-  ): Promise<Static<typeof SingleArticleResponse>> {
-    console.log("create", body);
+    @Body() body: t.Static<typeof CreateUpdateArticleRequestBody>
+  ): Promise<t.Static<typeof SingleArticleResponse>> {
     const article = createArticle(body.article, this.ctx);
     const result = await this.ctx.repo.article.saveBySlug(
       article.slug,
@@ -68,12 +78,18 @@ export class ArticlesController {
   }
 
   @Put(":slug")
+  @Validate({
+      request: [
+        { name: 'slug', type: 'param', schema: t.String() },
+        { name: 'body', type: 'body', schema: CreateUpdateArticleRequestBody },
+      ],
+  })
   async update(
     @Param("slug")
     slug: string,
     @Body()
-    body: Static<typeof CreateUpdateArticleRequestBody>
-  ): Promise<Static<typeof SingleArticleResponse>> {
+    body: t.Static<typeof CreateUpdateArticleRequestBody>
+  ): Promise<t.Static<typeof SingleArticleResponse>> {
     const result = await this.ctx.repo.article.saveBySlug(
       slug,
       (oldArticle) => {
@@ -88,6 +104,11 @@ export class ArticlesController {
   }
 
   @Delete(":slug")
+  @Validate({
+      request: [
+        { name: 'slug', type: 'param', schema: t.String() },
+      ],
+  })
   @HttpCode(204)
   async remove(@Param("slug") slug: string): Promise<void> {
     const result = await this.ctx.repo.article.deleteBySlug(slug);
