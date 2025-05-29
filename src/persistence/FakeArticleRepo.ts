@@ -1,4 +1,5 @@
 import type { Article } from "../domain/articles/Article";
+import { NotExistError } from "../domain/errors";
 import type { ArticleRepo } from "./types";
 
 function createFakeArticleRepo(
@@ -29,9 +30,9 @@ function createFakeArticleRepo(
 		async deleteBySlug(slug) {
 			if (state[slug]) {
 				delete state[slug];
-				return "success";
+				return;
 			}
-			return "not-found";
+			throw new NotExistError(`Article for slug=${slug}`);
 		},
 	} satisfies ArticleRepo;
 }

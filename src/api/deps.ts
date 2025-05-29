@@ -18,15 +18,23 @@ export function setupMemoryDb(
   });
 
   try {
-    db.run(`CREATE TABLE "articles" (
+    db.run(`
+    CREATE TABLE "articles" (
 			"slug" text PRIMARY KEY NOT NULL,
 			"title" text NOT NULL,
 			"description" text NOT NULL,
 			"body" text NOT NULL,
 			"createdAt" integer NOT NULL,
 			"updatedAt" integer NOT NULL
-		);
-		`);
+		);`);
+    db.run(`
+    CREATE TABLE "comments" (
+			"id" text PRIMARY KEY NOT NULL,
+			"article_slug" text NOT NULL,
+			"body" text NOT NULL,
+			"createdAt" integer NOT NULL,
+			"updatedAt" integer NOT NULL
+		);`)
   } catch (e) {}
   return db;
 }
@@ -47,6 +55,15 @@ export function setupPgliteDb(): {
 			"slug" text PRIMARY KEY NOT NULL,
 			"title" text NOT NULL,
 			"description" text NOT NULL,
+			"body" text NOT NULL,
+			"createdAt" timestamp NOT NULL,
+			"updatedAt" timestamp NOT NULL
+		);
+		`);
+
+    await db.execute(`CREATE TABLE "comments" (
+			"id" text PRIMARY KEY NOT NULL,
+			"article_slug" text NOT NULL,
 			"body" text NOT NULL,
 			"createdAt" timestamp NOT NULL,
 			"updatedAt" timestamp NOT NULL

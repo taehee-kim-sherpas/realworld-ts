@@ -38,7 +38,7 @@ export function createFetchClient(
 				body: data ? JSON.stringify(data) : undefined,
 			}),
 		);
-
+		
 		if (res.ok) {
 			return res;
 		}

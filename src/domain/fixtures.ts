@@ -1,4 +1,5 @@
 import type { Article } from "./articles/Article.ts";
+import { Comment } from "./articles/comments/Comment.ts";
 
 export const TEST_ARTICLE: Article = {
 	title: "TDD, 테스트 주도 개발",
@@ -31,4 +32,20 @@ export const UPDATE_ANOTHER_ARTICLE: Pick<
 	title: ANOTHER_ARTICLE.title,
 	description: ANOTHER_ARTICLE.description,
 	body: ANOTHER_ARTICLE.body,
+};
+
+export const TEST_COMMENT: Comment = {
+	id: "a70bb61d-240a-48de-999a-1eda641ff953",
+	body: "와 테스트를 배우는데 큰 도움이 되는 글이네요요",
+	createdAt: new Date("2024-02-01"),
+	updatedAt: new Date("2024-02-01"),
+	// author: {
+	// 	username: "",
+	// 	bio: "",
+	// 	image: ""
+	// }
+};
+
+export const CREATE_COMMENT: Pick<Comment, "body"> = {
+	body: TEST_COMMENT.body,
 };

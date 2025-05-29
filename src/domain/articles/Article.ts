@@ -1,9 +1,12 @@
+import { DateContext } from "../date";
+import { SlugifyContext } from "../slug";
+
 export type Article = {
 	title: string;
 	slug: string;
 	description: string;
 	body: string;
-	//   author: string;
+	//   author: Profile;
 	//   tagList: string;
 	//   favorited: string;
 	//   favoritesCount: string;
@@ -17,7 +20,7 @@ export function createArticle(
 		description: string;
 		body: string;
 	},
-	context: { getNow: () => Date; slugify: (text: string) => string },
+	context: DateContext & SlugifyContext,
 ): Article {
 	return {
 		...dto,
@@ -34,12 +37,12 @@ export function updateArticle(
 		description: string;
 		body: string;
 	},
-	context: { getNow: () => Date; slugify: (text: string) => string },
+	context: DateContext & SlugifyContext,
 ): Article {
 	return {
 		...article,
 		...dto,
-		slug: context.slugify(dto.title ?? article.title),
+		slug: dto.title ? context.slugify(dto.title) : article.slug,
 		updatedAt: context.getNow(),
 	};
 }

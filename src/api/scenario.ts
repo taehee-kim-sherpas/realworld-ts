@@ -1,10 +1,12 @@
 import { afterAll, beforeAll, describe, expect, it } from "bun:test";
-import { ANOTHER_ARTICLE, TEST_ARTICLE } from "../domain/fixtures";
+import { ANOTHER_ARTICLE, CREATE_ARTICLE, CREATE_COMMENT, TEST_ARTICLE, TEST_COMMENT, UPDATE_ANOTHER_ARTICLE } from "../domain/fixtures";
 import { createFakeContext, type TestContext } from "./context";
 import { createFetchClient, type FetchClient } from "./fetchClient";
 import { setupMemoryDb, setupPgliteDb } from "./deps";
 import createDrizzleSqliteArticleRepo from "../persistence/drizzle/DrizzleSqliteArticleRepo";
 import { createDrizzlePgArticleRepo } from "../persistence/drizzle/DrizzlePgArticleRepo";
+import createDrizzleSqliteCommentRepo from "../persistence/drizzle/DrizzleSqliteCommentRepo";
+import createDrizzlePgCommentRepo from "../persistence/drizzle/DrizzlePgCommentRepo";
 
 export function runTestScenario(
   implName: string,
@@ -55,11 +57,7 @@ export function runTestScenario(
 
         logs.push("POST /api/articles");
         await client.post("/api/articles", {
-          article: {
-            title: TEST_ARTICLE.title,
-            description: TEST_ARTICLE.description,
-            body: TEST_ARTICLE.body,
-          },
+          article: CREATE_ARTICLE,
         });
 
         logs.push("after GET /api/articles");
@@ -89,13 +87,9 @@ export function runTestScenario(
         });
 
         logs.push(`PUT /api/articles/${TEST_ARTICLE.slug}`);
-        context.setNow(new Date(ANOTHER_ARTICLE.updatedAt));
+        context.setNow(ANOTHER_ARTICLE.updatedAt);
         await client.put(`/api/articles/${TEST_ARTICLE.slug}`, {
-          article: {
-            title: ANOTHER_ARTICLE.title,
-            description: ANOTHER_ARTICLE.description,
-            body: ANOTHER_ARTICLE.body,
-          },
+          article: UPDATE_ANOTHER_ARTICLE,
         });
 
         logs.push(`after update GET /api/articles/${ANOTHER_ARTICLE.slug}`);
@@ -119,6 +113,70 @@ export function runTestScenario(
 
         expect(afterDelete).toStrictEqual({
           articles: [],
+        });
+
+        logs.push("End");
+      } catch (throwable) {
+        let error = throwable;
+        if (throwable instanceof Response) {
+          error = new Error(
+            `${throwable.status} ${
+              throwable.statusText
+            }\n\n${await throwable.text()}`
+          );
+        }
+
+        if (error instanceof Error) {
+          error.message = `[Logs]\n\n${logs.join(
+            "\n"
+          )}\n\n[Original Error]\n\n${error.message}`;
+        }
+
+        throw error;
+      }
+    });
+
+    it("Comment", async () => {
+      const logs: string[] = [];
+
+      try {
+        logs.push("POST /api/articles");
+        await client.post("/api/articles", {
+          article: CREATE_ARTICLE,
+        });
+
+        logs.push(`before GET /api/articles/${TEST_ARTICLE.slug}/comments`);
+        const before = await client.get(`/api/articles/${TEST_ARTICLE.slug}/comments`);
+
+        expect(before).toStrictEqual({
+          comments: [],
+        });
+
+        context.setNextId(TEST_COMMENT.id)
+        logs.push(`POST /api/articles/${TEST_ARTICLE.slug}/comments`);
+        await client.post(`/api/articles/${TEST_ARTICLE.slug}/comments`, {
+          comment: CREATE_COMMENT,
+        });
+
+        logs.push(`after GET /api/articles/${TEST_ARTICLE.slug}/comments`);
+        const after = await client.get(`/api/articles/${TEST_ARTICLE.slug}/comments`);
+
+        expect(after).toStrictEqual({
+          comments: [{
+            ...TEST_COMMENT,
+            createdAt: TEST_COMMENT.createdAt.toISOString(),
+            updatedAt: TEST_COMMENT.updatedAt.toISOString()
+          }],
+        });
+
+        logs.push(`DELETE /api/articles/${TEST_ARTICLE.slug}/comments/${TEST_COMMENT.id}`);
+        await client.del(`/api/articles/${TEST_ARTICLE.slug}/comments/${TEST_COMMENT.id}`);
+
+        logs.push(`after delete GET /api/articles/${TEST_ARTICLE.slug}/comments`);
+        const afterDelete = await client.get(`/api/articles/${TEST_ARTICLE.slug}/comments`);
+
+        expect(afterDelete).toStrictEqual({
+          comments: [],
         });
 
         logs.push("End");
@@ -171,6 +229,7 @@ export function runTest(
     const drizzleSqliteRepoContext = createFakeContext({
       repo: {
         article: createDrizzleSqliteArticleRepo(sqliteDb),
+        comment: createDrizzleSqliteCommentRepo(sqliteDb)
       },
     });
     const drizzleSqliteApp = createApp(drizzleSqliteRepoContext);
@@ -186,24 +245,25 @@ export function runTest(
     };
   });
 
-  // runTestScenario(`${appName} api - drizzle Pg`, () => {
-  //   const pgDb = setupPgliteDb();
-  //   const drizzlePgRepoContext = createFakeContext({
-  //     repo: {
-  //       article: createDrizzlePgArticleRepo(pgDb.db),
-  //     },
-  //     setup: pgDb.setup,
-  //   });
-  //   const drizzlePgApp = createApp(drizzlePgRepoContext);
+  runTestScenario(`${appName} api - drizzle Pg`, () => {
+    const pgDb = setupPgliteDb();
+    const drizzlePgRepoContext = createFakeContext({
+      repo: {
+        article: createDrizzlePgArticleRepo(pgDb.db),
+        comment: createDrizzlePgCommentRepo(pgDb.db)
+      },
+      setup: pgDb.setup,
+    });
+    const drizzlePgApp = createApp(drizzlePgRepoContext);
 
-  //   return {
-  //     client: createFetchClient((request) =>
-  //       drizzlePgApp.then((app) => app.fetch(request))
-  //     ),
-  //     context: drizzlePgRepoContext,
-  //     teardown: async () => {
-  //       await drizzlePgApp.then((app) => app.teardown?.());
-  //     },
-  //   };
-  // });
+    return {
+      client: createFetchClient((request) =>
+        drizzlePgApp.then((app) => app.fetch(request))
+      ),
+      context: drizzlePgRepoContext,
+      teardown: async () => {
+        await drizzlePgApp.then((app) => app.teardown?.());
+      },
+    };
+  });
 }

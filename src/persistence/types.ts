@@ -1,4 +1,5 @@
 import type { Article } from "../domain/articles/Article";
+import type { Comment } from "../domain/articles/comments/Comment";
 
 export interface ArticleRepo {
 	list(): Promise<Article[]>;
@@ -7,7 +8,19 @@ export interface ArticleRepo {
 		slug: Article["slug"],
 		update: (
 			old: Article | undefined,
-		) => Article | "already-exist" | "not-found",
-	): Promise<Article | "already-exist" | "not-found">;
-	deleteBySlug(slug: Article["slug"]): Promise<"success" | "not-found">;
+		) => Article,
+	): Promise<Article>;
+	deleteBySlug(slug: Article["slug"]): Promise<void>;
+}
+
+export interface CommentRepo {
+	listByArticleSlug(slug: string): Promise<Comment[]>;
+	saveBySlugAndId(
+		slug: string,
+		id: Comment["id"],
+		update: (
+			old: Comment | undefined,
+		) => Comment,
+	): Promise<Comment>;
+	deleteBySlug(slug: string, id: Comment["id"]): Promise<undefined>;
 }

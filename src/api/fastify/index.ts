@@ -5,6 +5,7 @@ import {
 } from "@fastify/type-provider-typebox";
 import Fastify from "fastify";
 import { registerArticles } from "./articles.ts";
+import { registerComments } from "./comments.ts";
 import swagger from "@fastify/swagger";
 import swaggerUi from "@fastify/swagger-ui";
 import { createFakeContext, type AppContext } from "../context";
@@ -15,7 +16,8 @@ export function createFastify(ctx: AppContext) {
 	})
 		.setValidatorCompiler(TypeBoxValidatorCompiler)
 		.withTypeProvider<TypeBoxTypeProvider>()
-		.register(registerArticles(ctx), { prefix: "/api/articles" });
+		.register(registerArticles(ctx), { prefix: "/api/articles" })
+		.register(registerComments(ctx), { prefix: "/api/articles/:slug/comments" });
 }
 
 const fakeRepoContext = createFakeContext({});

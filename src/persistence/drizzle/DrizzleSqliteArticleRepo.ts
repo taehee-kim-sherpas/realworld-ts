@@ -1,9 +1,9 @@
 import { eq } from "drizzle-orm/sql/expressions";
-
 import { sql } from "drizzle-orm";
 import type { ArticleRepo } from "../types.ts";
 import * as schema from "./sqliteSchema.ts";
 import type { BaseSQLiteDatabase } from "drizzle-orm/sqlite-core/db";
+import { NotExistError } from "../../domain/errors.ts";
 
 function createDrizzleSqliteArticleRepo(
   db: BaseSQLiteDatabase<"sync" | "async", void, typeof schema>
@@ -76,9 +76,10 @@ function createDrizzleSqliteArticleRepo(
           .delete(schema.articles)
           .where(eq(schema.articles.slug, slug))
           .execute();
-        return "success";
+          return;
       }
-      return "not-found";
+
+      throw new NotExistError(`Article for slug=${slug}`);
     },
   } satisfies ArticleRepo;
 }

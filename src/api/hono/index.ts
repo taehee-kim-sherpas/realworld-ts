@@ -7,12 +7,18 @@ import { describeRoute, openAPISpecs } from "hono-openapi";
 import createFakeArticleRepo from "../../persistence/FakeArticleRepo";
 import {
 	multipleArticlesResponseDto,
+	multipleCommentsResponseDto,
+	newCommentRequestDto,
 	singleArticleResponseDto,
+	singleCommentResponseDto,
 	updateNewArticleRequestDto,
 } from "../../schema/valibot/articlesDto";
 import { vValidator } from "@hono/valibot-validator";
 import { createArticle, updateArticle } from "../../domain/articles/Article";
 import type { AppContext } from "../context";
+import createFakeCommentRepo from "../../persistence/FakeCommentRepo";
+import { createComment } from "../../domain/articles/comments/Comment";
+import { AlreadyExistError, NotExistError } from "../../domain/errors";
 
 export function createApp(ctx: AppContext) {
 	const app = new Hono()
@@ -41,22 +47,14 @@ export function createApp(ctx: AppContext) {
 				const result = await ctx.repo.article.saveBySlug(
 					article.slug,
 					(old) => {
+						
 						if (old) {
-							return "already-exist";
+							throw new AlreadyExistError(`Article for article=${article.slug}`);
 						}
 
 						return article;
 					},
 				);
-
-				if (result === "already-exist") {
-					return new Response(
-						`CONFLICT: slug ${ctx.slugify(reqDto.article.title)}`,
-						{
-							status: 409,
-						},
-					);
-				}
 
 				return c.json({ article });
 			},
@@ -74,17 +72,11 @@ export function createApp(ctx: AppContext) {
 
 				const result = await ctx.repo.article.saveBySlug(slug, (oldArticle) => {
 					if (oldArticle === undefined) {
-						return "not-found";
+						throw new NotExistError(`Article for slug=${slug}`);
 					}
 
 					return updateArticle(oldArticle, reqDto.article, ctx);
 				});
-
-				if (result === "not-found") {
-					return new Response(`NOT_FOUND: slug ${slug}`, {
-						status: 404,
-					});
-				}
 
 				return c.json({ article: result });
 			},
@@ -101,9 +93,7 @@ export function createApp(ctx: AppContext) {
 				const article = await ctx.repo.article.getBySlug(slug);
 
 				if (article === undefined) {
-					return new Response(`NOT FOUND: ${c.req.url.toString()}`, {
-						status: 404,
-					});
+					throw new NotExistError(`Article for slug=${slug}`);
 				}
 
 				return c.json({ article });
@@ -115,13 +105,56 @@ export function createApp(ctx: AppContext) {
 			async (c) => {
 				const { slug } = c.req.valid("param");
 
-				const result = await ctx.repo.article.deleteBySlug(slug);
+				await ctx.repo.article.deleteBySlug(slug);
 
-				if (result === "not-found") {
-					return new Response(`NOT FOUND: ${c.req.url.toString()}`, {
-						status: 404,
-					});
-				}
+				return new Response("", {
+					status: 204,
+				});
+			},
+		)
+		.get(
+			"/api/articles/:slug/comments",
+			simpleRoute({
+				res: multipleCommentsResponseDto,
+			}),
+			vValidator("param", v.object({ slug: v.string() })),
+			async (c) => {
+				const { slug } = c.req.valid("param");
+
+				const comments = await ctx.repo.comment.listByArticleSlug(slug);
+
+				return c.json({ comments });
+			},
+		)
+		.post(
+			"/api/articles/:slug/comments",
+			simpleRoute({
+				res: singleCommentResponseDto,
+			}),
+			vValidator("param", v.object({ slug: v.string() })),
+			vValidator("json", newCommentRequestDto),
+			async (c) => {
+				const { slug } = c.req.valid("param");
+				const dto = c.req.valid("json");
+
+				const comment = createComment(dto.comment, ctx);
+
+				await ctx.repo.comment.saveBySlugAndId(
+					slug,
+					comment.id,
+					(_old) => comment,
+				);
+
+				return c.json({ comment });
+			},
+		)
+		.delete(
+			"/api/articles/:slug/comments/:id",
+			vValidator("param", v.object({ slug: v.string(), id: v.string() })),
+			async (c) => {
+				const { id, slug } = c.req.valid("param");
+
+				await ctx.repo.comment.deleteBySlug(slug, id);
 
 				return new Response("", {
 					status: 204,
@@ -130,12 +163,22 @@ export function createApp(ctx: AppContext) {
 		);
 
 	app.notFound(async (c) => {
-		return new Response(`NOT FOUND: ${c.req.url.toString()}`, {
+		return new Response(`NOT_FOUND: ${c.req.url.toString()}`, {
 			status: 404,
 		});
 	});
 
 	app.onError((error, c) => {
+		if (error instanceof NotExistError) {
+			return new Response(`NOT_EXIST: ${c.req.url.toString()}`, {
+				status: 404,
+			});
+		}
+		if (error instanceof AlreadyExistError) {
+			return new Response(`ALREADY_EXIST: ${c.req.url.toString()}`, {
+				status: 409,
+			});
+		}
 		if (error instanceof Error) {
 			return new Response(error.message, {
 				status: 500,
@@ -193,6 +236,10 @@ export default createApp({
 	},
 	repo: {
 		article: createFakeArticleRepo({}),
+		comment: createFakeCommentRepo({}),
 	},
 	slugify,
+	generateId() {
+		return crypto.randomUUID();
+	},
 });

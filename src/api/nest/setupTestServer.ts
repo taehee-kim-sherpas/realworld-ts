@@ -2,10 +2,11 @@ import { default as supertest } from "supertest";
 import { Test } from "@nestjs/testing";
 import { ArticlesModule } from "./articles/articles.module.ts";
 import type { AppContext } from "../context.ts";
+import { CommentsModule } from "./comments/comments.module.ts";
 
 export async function setupTestServer(ctx: AppContext) {
   const moduleRef = await Test.createTestingModule({
-    imports: [ArticlesModule],
+    imports: [ArticlesModule, CommentsModule],
   })
     .overrideProvider("APP_CONTEXT")
     .useValue(ctx)

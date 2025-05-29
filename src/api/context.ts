@@ -1,21 +1,24 @@
 import slugify from "cjk-slug";
-import type { ArticleRepo } from "../persistence/types";
+import type { ArticleRepo, CommentRepo } from "../persistence/types";
 import createFakeArticleRepo from "../persistence/FakeArticleRepo";
-import { articles } from "../persistence/drizzle/sqliteSchema";
+import type { DateContext } from "../domain/date";
+import type { SlugifyContext } from "../domain/slug";
+import createFakeCommentRepo from "../persistence/FakeCommentRepo";
+import type { GeneateIdContext } from "../domain/id";
 
-export interface AppContext {
-  repo: { article: ArticleRepo };
-  getNow: () => Date;
-  slugify: (text: string) => string;
+export interface AppContext extends DateContext, SlugifyContext, GeneateIdContext {
+  repo: { article: ArticleRepo, comment: CommentRepo };
 }
 
 export interface TestContext extends AppContext {
   setup?: () => Promise<void>;
   setNow: (date: Date) => void;
+  setNextId: (id: string) => void;
 }
 
 export function createFakeContext(override: Partial<TestContext>): TestContext {
   let now = new Date("2024-01-01");
+  let nextId: string = crypto.randomUUID();
   return {
     getNow: () => now,
     setNow: (date: Date) => {
@@ -23,8 +26,15 @@ export function createFakeContext(override: Partial<TestContext>): TestContext {
     },
     repo: {
       article: createFakeArticleRepo({}),
+      comment: createFakeCommentRepo({})
     },
     slugify,
+    setNextId: (id) => {
+      nextId = id;
+    },
+    generateId() {
+      return nextId;
+    },
     ...override,
   };
 }
