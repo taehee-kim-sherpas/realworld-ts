@@ -2,29 +2,32 @@ import { eq } from "drizzle-orm/sql/expressions";
 
 import { sql } from "drizzle-orm";
 import type { ArticleRepo } from "../types.ts";
-import * as schema from "./sqliteSchema.ts";
-import type { BaseSQLiteDatabase } from "drizzle-orm/sqlite-core/db";
+import * as pgSchema from "./pgSchema.ts";
+import type { PgQueryResultHKT } from "drizzle-orm/pg-core/session";
+import type { PgDatabase } from "drizzle-orm/pg-core/db";
 
-function createDrizzleSqliteArticleRepo(
-  db: BaseSQLiteDatabase<"sync" | "async", void, typeof schema>
+export function createDrizzlePgArticleRepo(
+  db: PgDatabase<PgQueryResultHKT, typeof pgSchema>
 ): ArticleRepo {
-  const preparedAll = db.query.articles.findMany({}).prepare();
+  const preparedAll = db.query.articles
+    .findMany({})
+    .prepare("get_articles_list");
 
   const preparedGet = db.query.articles
     .findFirst({
-      where: eq(schema.articles.slug, sql.placeholder("targetSlug")),
+      where: eq(pgSchema.articles.slug, sql.placeholder("targetSlug")),
     })
-    .prepare();
+    .prepare("get_article_by_slug");
 
   return {
     async getBySlug(slug) {
-      return preparedGet.get({ targetSlug: slug });
+      return preparedGet.execute({ targetSlug: slug });
     },
     async list() {
-      return preparedAll.all();
+      return preparedAll.execute();
     },
     async saveBySlug(slug, update) {
-      const old = await preparedGet.get({ targetSlug: slug });
+      const old = await preparedGet.execute({ targetSlug: slug });
 
       const updated = update(old);
 
@@ -34,7 +37,7 @@ function createDrizzleSqliteArticleRepo(
 
       if (old === undefined) {
         await db
-          .insert(schema.articles)
+          .insert(pgSchema.articles)
           .values({
             title: updated.title,
             slug: updated.slug,
@@ -50,7 +53,7 @@ function createDrizzleSqliteArticleRepo(
           .execute();
       } else {
         await db
-          .update(schema.articles)
+          .update(pgSchema.articles)
           .set({
             title: updated.title,
             slug: updated.slug,
@@ -63,18 +66,18 @@ function createDrizzleSqliteArticleRepo(
             createdAt: updated.createdAt,
             updatedAt: updated.updatedAt,
           })
-          .where(eq(schema.articles.slug, old.slug))
+          .where(eq(pgSchema.articles.slug, old.slug))
           .execute();
       }
 
       return updated;
     },
     async deleteBySlug(slug) {
-      const old = await preparedGet.get({ targetSlug: slug });
+      const old = await preparedGet.execute({ targetSlug: slug });
       if (old) {
         await db
-          .delete(schema.articles)
-          .where(eq(schema.articles.slug, slug))
+          .delete(pgSchema.articles)
+          .where(eq(pgSchema.articles.slug, slug))
           .execute();
         return "success";
       }
@@ -83,4 +86,4 @@ function createDrizzleSqliteArticleRepo(
   } satisfies ArticleRepo;
 }
 
-export default createDrizzleSqliteArticleRepo;
+export default createDrizzlePgArticleRepo;

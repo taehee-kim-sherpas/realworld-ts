@@ -1,26 +1,15 @@
-import { runTestScenario } from "../scenario";
-import { describe } from "bun:test";
-import { createFetchClient } from "../fetchClient.ts";
-import { createApp } from "./index.ts";
-import { createFakeContext } from "../context.ts";
-import createDrizzleSqliteArticleRepo from "../../persistence/drizzle/DrizzleSqliteArticleRepo.ts";
-import { setupMemoryDb } from "../deps.ts";
+import { expect, test } from "bun:test";
+import { createApp } from ".";
+import { runTest } from "../scenario";
 
-describe("elysia", () => {
-	const fakeRepoContext = createFakeContext({});
-	const app = createApp(fakeRepoContext);
-	runTestScenario("elysia api - fake repo", createFetchClient(app.handle), fakeRepoContext);
+test("setup", () => {
+  expect(1 + 1).toBe(2);
+});
 
-	const db = setupMemoryDb();
-	const drizzleRepoContext = createFakeContext({
-		repo: {
-			article: createDrizzleSqliteArticleRepo(db),
-		},
-	});
-	const drizzleApp = createApp(drizzleRepoContext);
-	runTestScenario(
-		"elysia api - drizzle sqlite",
-		createFetchClient(drizzleApp.handle),
-		drizzleRepoContext,
-	);
+runTest("elysia", (ctx) => {
+  const app = createApp(ctx);
+
+  return {
+    fetch: app.handle,
+  };
 });

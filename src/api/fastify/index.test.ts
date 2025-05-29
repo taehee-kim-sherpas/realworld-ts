@@ -1,17 +1,8 @@
-
-import { createFakeContext } from "../context";
-import { runTestScenario } from "../scenario";
-import { afterAll, describe } from "bun:test";
+import { expect, test } from "bun:test";
+import { runTest } from "../scenario";
 import { setupTestServer } from "./testServer";
-import { createFetchClient } from "../fetchClient";
 
-describe("Fastify", async () => {
-		const fakeRepoContext = createFakeContext({});
-		const app = await setupTestServer(fakeRepoContext);
-		
-		runTestScenario("Fastify api - fake repo", createFetchClient(app.fetch), fakeRepoContext);
-
-		afterAll(async () => {
-			await app.teardown();
-		})
+test("setup", () => {
+  expect(1 + 1).toBe(2);
 });
+runTest("Fastify", (ctx) => setupTestServer(ctx));

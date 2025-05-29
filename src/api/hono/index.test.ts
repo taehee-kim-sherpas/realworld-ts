@@ -1,34 +1,8 @@
-import { runTestScenario } from "../scenario";
-import { describe } from "bun:test";
-import { createFetchClient } from "../fetchClient.ts";
+import { expect, test } from "bun:test";
+import { runTest } from "../scenario";
 import { createApp } from "./index.ts";
-import { createFakeContext } from "../context.ts";
-import createDrizzleSqliteArticleRepo from "../../persistence/drizzle/DrizzleSqliteArticleRepo.ts";
-import { setupMemoryDb } from "../deps.ts";
 
-describe("hono", () => {
-	const fakeRepoContext = createFakeContext({});
-	const app = createApp(fakeRepoContext);
-	
-	runTestScenario("hono api - fake repo", createFetchClient(app.request), fakeRepoContext);
-
-
-	const db = setupMemoryDb();
-	const drizzleRepoContext = createFakeContext({
-		repo: {
-			article: createDrizzleSqliteArticleRepo(db),
-		},
-	});
-	const drizzleApp = createApp(drizzleRepoContext);
-	runTestScenario(
-		"hono api - drizzle sqlite",
-		createFetchClient(drizzleApp.request),
-		drizzleRepoContext,
-	);
-
-	// typeOrm
-
-	// ...
-
-	// ...
+test("setup", () => {
+  expect(1 + 1).toBe(2);
 });
+runTest("hono", (ctx) => createApp(ctx));
