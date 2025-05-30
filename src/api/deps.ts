@@ -8,17 +8,17 @@ import type { PgDatabase, PgQueryResultHKT } from "drizzle-orm/pg-core";
 import type { BaseSQLiteDatabase } from "drizzle-orm/sqlite-core/db";
 
 export function setupMemoryDb(
-  _key: string
+	_key: string,
 ): BaseSQLiteDatabase<"sync", void, typeof sqliteSchema> {
-  // const sqlite = new Database("test-" + key + ".db");
-  const sqlite = new Database(":memory:");
+	// const sqlite = new Database("test-" + key + ".db");
+	const sqlite = new Database(":memory:");
 
-  const db = drizzleSqlite(sqlite, {
-    schema: sqliteSchema,
-  });
+	const db = drizzleSqlite(sqlite, {
+		schema: sqliteSchema,
+	});
 
-  try {
-    db.run(`
+	try {
+		db.run(`
     CREATE TABLE "articles" (
 			"slug" text PRIMARY KEY NOT NULL,
 			"title" text NOT NULL,
@@ -27,31 +27,31 @@ export function setupMemoryDb(
 			"createdAt" integer NOT NULL,
 			"updatedAt" integer NOT NULL
 		);`);
-    db.run(`
+		db.run(`
     CREATE TABLE "comments" (
 			"id" text PRIMARY KEY NOT NULL,
 			"article_slug" text NOT NULL,
 			"body" text NOT NULL,
 			"createdAt" integer NOT NULL,
 			"updatedAt" integer NOT NULL
-		);`)
-  } catch (e) {}
-  return db;
+		);`);
+	} catch (e) {}
+	return db;
 }
 
 export function setupPgliteDb(): {
-  db: PgDatabase<PgQueryResultHKT, typeof pgSchema>;
-  setup: () => Promise<void>;
+	db: PgDatabase<PgQueryResultHKT, typeof pgSchema>;
+	setup: () => Promise<void>;
 } {
-  const client = new PGlite();
+	const client = new PGlite();
 
-  const db = drizzlePglite(client, {
-    schema: pgSchema,
-  });
-  return {
-    db,
-    async setup() {
-      await db.execute(`CREATE TABLE "articles" (
+	const db = drizzlePglite(client, {
+		schema: pgSchema,
+	});
+	return {
+		db,
+		async setup() {
+			await db.execute(`CREATE TABLE "articles" (
 			"slug" text PRIMARY KEY NOT NULL,
 			"title" text NOT NULL,
 			"description" text NOT NULL,
@@ -61,7 +61,7 @@ export function setupPgliteDb(): {
 		);
 		`);
 
-    await db.execute(`CREATE TABLE "comments" (
+			await db.execute(`CREATE TABLE "comments" (
 			"id" text PRIMARY KEY NOT NULL,
 			"article_slug" text NOT NULL,
 			"body" text NOT NULL,
@@ -69,6 +69,6 @@ export function setupPgliteDb(): {
 			"updatedAt" timestamp NOT NULL
 		);
 		`);
-    },
-  };
+		},
+	};
 }

@@ -3,6 +3,6 @@ import { runTest } from "../scenario";
 import { createApp } from "./index.ts";
 
 test("setup", () => {
-  expect(1 + 1).toBe(2);
+	expect(1 + 1).toBe(2);
 });
 runTest("hono", async (ctx) => createApp(ctx));

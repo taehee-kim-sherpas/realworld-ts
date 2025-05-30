@@ -71,7 +71,7 @@ export function createApp(ctx: AppContext) {
 				const article = await ctx.repo.article.getBySlug(targetSlug);
 
 				if (article === undefined) {
-					throw new NotExistError(`Artcile for slug=${targetSlug}`);
+					throw new NotExistError(`Article for slug=${targetSlug}`);
 				}
 
 				return { article };
@@ -126,7 +126,7 @@ export function createApp(ctx: AppContext) {
 				const article = await ctx.repo.article.getBySlug(targetSlug);
 
 				if (article === undefined) {
-					throw new NotExistError(`Artcile for slug=${targetSlug}`);
+					throw new NotExistError(`Article for slug=${targetSlug}`);
 				}
 
 				const comments = await ctx.repo.comment.listByArticleSlug(targetSlug);
@@ -172,7 +172,7 @@ export function createApp(ctx: AppContext) {
 				const article = await ctx.repo.article.getBySlug(targetSlug);
 
 				if (article === undefined) {
-					throw new NotExistError(`Artcile for slug=${targetSlug}`);
+					throw new NotExistError(`Article for slug=${targetSlug}`);
 				}
 
 				await ctx.repo.comment.deleteBySlug(targetSlug, id);

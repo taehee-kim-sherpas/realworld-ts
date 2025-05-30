@@ -7,10 +7,7 @@ import { describeRoute, openAPISpecs } from "hono-openapi";
 import createFakeArticleRepo from "../../persistence/FakeArticleRepo";
 import {
 	multipleArticlesResponseDto,
-	multipleCommentsResponseDto,
-	newCommentRequestDto,
 	singleArticleResponseDto,
-	singleCommentResponseDto,
 	updateNewArticleRequestDto,
 } from "../../schema/valibot/articlesDto";
 import { vValidator } from "@hono/valibot-validator";
@@ -19,6 +16,11 @@ import type { AppContext } from "../context";
 import createFakeCommentRepo from "../../persistence/FakeCommentRepo";
 import { createComment } from "../../domain/articles/comments/Comment";
 import { AlreadyExistError, NotExistError } from "../../domain/errors";
+import {
+	multipleCommentsResponseDto,
+	newCommentRequestDto,
+	singleCommentResponseDto,
+} from "../../schema/valibot/commentsDto";
 
 export function createApp(ctx: AppContext) {
 	const app = new Hono()
@@ -44,17 +46,13 @@ export function createApp(ctx: AppContext) {
 
 				const article = createArticle(reqDto.article, ctx);
 
-				const result = await ctx.repo.article.saveBySlug(
-					article.slug,
-					(old) => {
-						
-						if (old) {
-							throw new AlreadyExistError(`Article for article=${article.slug}`);
-						}
+				await ctx.repo.article.saveBySlug(article.slug, (old) => {
+					if (old) {
+						throw new AlreadyExistError(`Article for article=${article.slug}`);
+					}
 
-						return article;
-					},
-				);
+					return article;
+				});
 
 				return c.json({ article });
 			},

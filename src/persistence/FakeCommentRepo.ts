@@ -15,7 +15,7 @@ function createFakeCommentRepo(
 		async saveBySlugAndId(slug, id, update) {
 			const comments = state[slug] ?? [];
 
-			const oldIndex = comments.findIndex(item => item.id === id);
+			const oldIndex = comments.findIndex((item) => item.id === id);
 
 			let comment = update(undefined);
 			if (oldIndex === -1) {
@@ -31,8 +31,8 @@ function createFakeCommentRepo(
 		async deleteBySlug(slug: string, id: Comment["id"]): Promise<undefined> {
 			const comments = state[slug] ?? [];
 
-			state[slug] = comments.filter(item => item.id !== id);
-		}
+			state[slug] = comments.filter((item) => item.id !== id);
+		},
 	} satisfies CommentRepo;
 }
 

@@ -17,7 +17,9 @@ export function createFastify(ctx: AppContext) {
 		.setValidatorCompiler(TypeBoxValidatorCompiler)
 		.withTypeProvider<TypeBoxTypeProvider>()
 		.register(registerArticles(ctx), { prefix: "/api/articles" })
-		.register(registerComments(ctx), { prefix: "/api/articles/:slug/comments" });
+		.register(registerComments(ctx), {
+			prefix: "/api/articles/:slug/comments",
+		});
 }
 
 const fakeRepoContext = createFakeContext({});

@@ -6,9 +6,7 @@ export interface ArticleRepo {
 	getBySlug(slug: Article["slug"]): Promise<Article | undefined>;
 	saveBySlug(
 		slug: Article["slug"],
-		update: (
-			old: Article | undefined,
-		) => Article,
+		update: (old: Article | undefined) => Article,
 	): Promise<Article>;
 	deleteBySlug(slug: Article["slug"]): Promise<void>;
 }
@@ -18,9 +16,7 @@ export interface CommentRepo {
 	saveBySlugAndId(
 		slug: string,
 		id: Comment["id"],
-		update: (
-			old: Comment | undefined,
-		) => Comment,
+		update: (old: Comment | undefined) => Comment,
 	): Promise<Comment>;
 	deleteBySlug(slug: string, id: Comment["id"]): Promise<undefined>;
 }

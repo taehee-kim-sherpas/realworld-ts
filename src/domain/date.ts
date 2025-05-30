@@ -1,3 +1,3 @@
 export interface DateContext {
-    getNow: () => Date;
+	getNow: () => Date;
 }

@@ -6,7 +6,9 @@ export const simpleRoute = <
 	SchemaT extends BaseSchema<unknown, unknown, BaseIssue<unknown>>,
 >({
 	res: resSchema,
-}: { res: SchemaT }) => {
+}: {
+	res: SchemaT;
+}) => {
 	return describeRoute({
 		responses: {
 			200: {
@@ -18,5 +20,6 @@ export const simpleRoute = <
 				description: getDescription(resSchema) ?? "",
 			},
 		},
+		validateResponse: true,
 	});
 };

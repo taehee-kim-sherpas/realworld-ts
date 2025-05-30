@@ -3,13 +3,13 @@ import { createApp } from ".";
 import { runTest } from "../scenario";
 
 test("setup", () => {
-  expect(1 + 1).toBe(2);
+	expect(1 + 1).toBe(2);
 });
 
 runTest("elysia", async (ctx) => {
-  const app = createApp(ctx);
+	const app = createApp(ctx);
 
-  return {
-    fetch: app.handle,
-  };
+	return {
+		fetch: app.handle,
+	};
 });

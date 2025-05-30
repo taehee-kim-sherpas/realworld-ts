@@ -1,119 +1,114 @@
 import {
-  Controller,
-  Get,
-  Post,
-  Put,
-  Delete,
-  Param,
-  Body,
-  Inject,
-  NotFoundException,
-  ConflictException,
-  HttpCode,
+	Controller,
+	Get,
+	Post,
+	Put,
+	Delete,
+	Param,
+	Body,
+	Inject,
+	NotFoundException,
+	ConflictException,
+	HttpCode,
+	UseFilters,
 } from "@nestjs/common";
 import * as t from "@sinclair/typebox";
 import {
-  CreateUpdateArticleRequestBody,
-  MultipleArticlesResponse,
-  SingleArticleResponse,
+	CreateUpdateArticleRequestBody,
+	MultipleArticlesResponse,
+	SingleArticleResponse,
 } from "../../../schema/typebox/articles";
 import {
-  createArticle,
-  updateArticle,
-  type Article,
+	createArticle,
+	updateArticle,
+	type Article,
 } from "../../../domain/articles/Article";
 import type { AppContext } from "../../context";
-import { Validate } from 'nestjs-typebox';
+import { Validate } from "nestjs-typebox";
+import { AlreadyExistError } from "../../../domain/errors";
+import { DomainErrorFilter } from "../filters";
 
 @Controller("api/articles")
 export class ArticlesController {
-  @Inject("APP_CONTEXT")
-  private ctx!: AppContext;
+	@Inject("APP_CONTEXT")
+	private ctx!: AppContext;
 
-  @Get()
-  async findAll(): Promise<t.Static<typeof MultipleArticlesResponse>> {
-    const articles = await this.ctx.repo.article.list();
-    return { articles };
-  }
+	@Get()
+	async findAll(): Promise<t.Static<typeof MultipleArticlesResponse>> {
+		const articles = await this.ctx.repo.article.list();
+		return { articles };
+	}
 
-  @Get(":slug")
-  @Validate({
-      request: [
-        { name: 'slug', type: 'param', schema: t.String() },
-      ],
-  })
-  async findOne(
-    @Param("slug") slug: string
-  ): Promise<t.Static<typeof SingleArticleResponse>> {
-    const article = await this.ctx.repo.article.getBySlug(slug);
-    if (!article) {
-      throw new NotFoundException("NOT_FOUND");
-    }
-    return { article };
-  }
+	@Get(":slug")
+	@Validate({
+		request: [{ name: "slug", type: "param", schema: t.String() }],
+	})
+	async findOne(
+		@Param("slug") slug: string,
+	): Promise<t.Static<typeof SingleArticleResponse>> {
+		const article = await this.ctx.repo.article.getBySlug(slug);
+		if (!article) {
+			throw new NotFoundException("NOT_FOUND");
+		}
+		return { article };
+	}
 
-  @Post()
-  @Validate({
-    request: [
-      { name: 'body', type: 'body', schema: CreateUpdateArticleRequestBody },
-    ],
-  })
-  async create(
-    @Body() body: t.Static<typeof CreateUpdateArticleRequestBody>
-  ): Promise<t.Static<typeof SingleArticleResponse>> {
-    const article = createArticle(body.article, this.ctx);
-    const result = await this.ctx.repo.article.saveBySlug(
-      article.slug,
-      (old) => {
-        if (old) return "already-exist";
-        return article;
-      }
-    );
-    if (result === "already-exist") {
-      throw new ConflictException(
-        `CONFLICT: slug ${this.ctx.slugify(body.article.title)}`
-      );
-    }
-    return { article: result as Article };
-  }
+	@Post()
+	@UseFilters(new DomainErrorFilter())
+	@Validate({
+		request: [
+			{ name: "body", type: "body", schema: CreateUpdateArticleRequestBody },
+		],
+	})
+	async create(
+		@Body() body: t.Static<typeof CreateUpdateArticleRequestBody>,
+	): Promise<t.Static<typeof SingleArticleResponse>> {
+		const article = createArticle(body.article, this.ctx);
+		const result = await this.ctx.repo.article.saveBySlug(
+			article.slug,
+			(old) => {
+				if (old) {
+					throw new AlreadyExistError("");
+				}
 
-  @Put(":slug")
-  @Validate({
-      request: [
-        { name: 'slug', type: 'param', schema: t.String() },
-        { name: 'body', type: 'body', schema: CreateUpdateArticleRequestBody },
-      ],
-  })
-  async update(
-    @Param("slug")
-    slug: string,
-    @Body()
-    body: t.Static<typeof CreateUpdateArticleRequestBody>
-  ): Promise<t.Static<typeof SingleArticleResponse>> {
-    const result = await this.ctx.repo.article.saveBySlug(
-      slug,
-      (oldArticle) => {
-        if (oldArticle === undefined) return "not-found";
-        return updateArticle(oldArticle, body.article, this.ctx);
-      }
-    );
-    if (result === "not-found") {
-      throw new NotFoundException(`NOT_FOUND: slug ${slug}`);
-    }
-    return { article: result as Article };
-  }
+				return article;
+			},
+		);
+		return { article: result as Article };
+	}
 
-  @Delete(":slug")
-  @Validate({
-      request: [
-        { name: 'slug', type: 'param', schema: t.String() },
-      ],
-  })
-  @HttpCode(204)
-  async remove(@Param("slug") slug: string): Promise<void> {
-    const result = await this.ctx.repo.article.deleteBySlug(slug);
-    if (result === "not-found") {
-      throw new NotFoundException(`NOT_FOUND: slug ${slug}`);
-    }
-  }
+	@Put(":slug")
+	@Validate({
+		request: [
+			{ name: "slug", type: "param", schema: t.String() },
+			{ name: "body", type: "body", schema: CreateUpdateArticleRequestBody },
+		],
+	})
+	async update(
+		@Param("slug")
+		slug: string,
+		@Body()
+		body: t.Static<typeof CreateUpdateArticleRequestBody>,
+	): Promise<t.Static<typeof SingleArticleResponse>> {
+		const result = await this.ctx.repo.article.saveBySlug(
+			slug,
+			(oldArticle) => {
+				if (!oldArticle) {
+					throw new NotFoundException("NOT_FOUND");
+				}
+
+				return updateArticle(oldArticle, body.article, this.ctx);
+			},
+		);
+		return { article: result as Article };
+	}
+
+	@Delete(":slug")
+	@Validate({
+		request: [{ name: "slug", type: "param", schema: t.String() }],
+	})
+	@HttpCode(204)
+	async remove(@Param("slug") slug: string): Promise<void> {
+		await this.ctx.repo.article.deleteBySlug(slug);
+	}
 }

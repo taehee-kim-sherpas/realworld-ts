@@ -39,7 +39,9 @@ export function registerComments(ctx: AppContext) {
 					},
 				},
 				async (request) => {
-					const comments = await ctx.repo.comment.listByArticleSlug(request.params.slug);
+					const comments = await ctx.repo.comment.listByArticleSlug(
+						request.params.slug,
+					);
 					return { comments };
 				},
 			)
@@ -65,7 +67,7 @@ export function registerComments(ctx: AppContext) {
 						comment.id,
 						(old) => {
 							if (old) {
-								throw new AlreadyExistError("")
+								throw new AlreadyExistError("");
 							}
 
 							return comment;

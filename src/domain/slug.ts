@@ -1,3 +1,3 @@
-export interface SlugifyContext {  
-  slugify: (text: string) => string;
+export interface SlugifyContext {
+	slugify: (text: string) => string;
 }

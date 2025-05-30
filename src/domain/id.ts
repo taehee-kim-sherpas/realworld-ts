@@ -1,3 +1,3 @@
 export interface GeneateIdContext {
-    generateId: () => string;
+	generateId: () => string;
 }

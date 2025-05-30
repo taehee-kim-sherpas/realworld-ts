@@ -66,11 +66,9 @@ function createDrizzleSqliteCommentRepo(
 			if (old) {
 				await db
 					.delete(schema.comments)
-					.where(
-						eq(schema.comments.id, id),
-					)
+					.where(eq(schema.comments.id, id))
 					.execute();
-        return;
+				return;
 			}
 
 			throw new NotExistError("");
