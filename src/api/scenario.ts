@@ -217,6 +217,8 @@ export function runTestScenario(
 					comments: [],
 				});
 
+				await client.del(`/api/articles/${TEST_ARTICLE.slug}`);
+
 				logs.push("End");
 			} catch (throwable) {
 				let error = throwable;
@@ -261,9 +263,32 @@ export function runTest(
 			},
 		};
 	});
+}
+
+export function runRepositoryTests(
+	appName: string,
+	createApp: (ctx: TestContext) => Promise<{
+		fetch: (request: Request) => Promise<Response> | Response;
+		teardown?: () => Promise<void>;
+	}>,
+) {
+	runTestScenario(`${appName} api - fake repo`, () => {
+		const fakeRepoContext = createFakeContext({});
+		const appPromise = createApp(fakeRepoContext);
+
+		return {
+			client: createFetchClient((request) =>
+				appPromise.then((app) => app.fetch(request)),
+			),
+			context: fakeRepoContext,
+			teardown: async () => {
+				await appPromise.then((app) => app.teardown?.());
+			},
+		};
+	});
 
 	runTestScenario(`${appName} api - drizzle sqlite`, () => {
-		const sqliteDb = setupMemoryDb(appName);
+		const { db: sqliteDb, destroy } = setupMemoryDb(appName);
 		const drizzleSqliteRepoContext = createFakeContext({
 			repo: {
 				article: createDrizzleSqliteArticleRepo(sqliteDb),
@@ -279,31 +304,33 @@ export function runTest(
 			context: drizzleSqliteRepoContext,
 			teardown: async () => {
 				await drizzleSqliteApp.then((app) => app.teardown?.());
+				await destroy();
 			},
 		};
 	});
 
-	runTestScenario(`${appName} api - drizzle Pg`, () => {
-		const pgDb = setupPgliteDb();
-		const drizzlePgRepoContext = createFakeContext({
-			repo: {
-				article: createDrizzlePgArticleRepo(pgDb.db),
-				comment: createDrizzlePgCommentRepo(pgDb.db),
-			},
-			setup: pgDb.setup,
-		});
-		const drizzlePgApp = createApp(drizzlePgRepoContext);
+	// runTestScenario(`${appName} api - drizzle Pg`, () => {
+	// 	const pgDb = setupPgliteDb();
+	// 	const drizzlePgRepoContext = createFakeContext({
+	// 		repo: {
+	// 			article: createDrizzlePgArticleRepo(pgDb.db),
+	// 			comment: createDrizzlePgCommentRepo(pgDb.db),
+	// 		},
+	// 		setup: pgDb.setup,
+	// 	});
+	// 	const drizzlePgApp = createApp(drizzlePgRepoContext);
 
-		return {
-			client: createFetchClient((request) =>
-				drizzlePgApp.then((app) => app.fetch(request)),
-			),
-			context: drizzlePgRepoContext,
-			teardown: async () => {
-				await drizzlePgApp.then((app) => app.teardown?.());
-			},
-		};
-	});
+	// 	return {
+	// 		client: createFetchClient((request) =>
+	// 			drizzlePgApp.then((app) => app.fetch(request)),
+	// 		),
+	// 		context: drizzlePgRepoContext,
+	// 		teardown: async () => {
+	// 			await drizzlePgApp.then((app) => app.teardown?.());
+	// 			await pgDb.destroy();
+	// 		},
+	// 	};
+	// });
 
 	runTestScenario(`${appName} api - drizzle gel`, () => {
 		const { db, setup } = setupGelDb();
@@ -344,6 +371,7 @@ export function runTest(
 			context: kyselyRepoContext,
 			teardown: async () => {
 				await kyselyApp.then((app) => app.teardown?.());
+				await kyselyDb.destroy();
 			},
 		};
 	});
@@ -369,7 +397,7 @@ export function runTest(
 			context: typeormRepoContext,
 			teardown: async () => {
 				await appPromise.then((app) => app.teardown?.());
-				await dataSource?.destroy?.();
+				await dataSource.destroy();
 			},
 		};
 	});

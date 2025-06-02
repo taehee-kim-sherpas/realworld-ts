@@ -1,6 +1,5 @@
 import type { Article } from "../domain/articles/Article";
 import type { Comment } from "../domain/articles/comments/Comment";
-import { NotExistError } from "../domain/errors";
 import type { CommentRepo } from "./types";
 
 function createFakeCommentRepo(

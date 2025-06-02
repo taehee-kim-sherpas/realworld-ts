@@ -16,10 +16,13 @@ import { BunSqliteDialect } from "kysely-bun-sqlite";
 import { DataSource } from "typeorm";
 import { ArticleEntity } from "../persistence/typeorm/ArticleEntity";
 import { CommentEntity } from "../persistence/typeorm/CommentEntity";
+import { ANOTHER_ARTICLE, TEST_ARTICLE } from "../domain/fixtures.ts";
+import { eq } from "drizzle-orm";
 
-export function setupMemoryDb(
-	_key: string,
-): BaseSQLiteDatabase<"sync", void, typeof sqliteSchema> {
+export function setupMemoryDb(_key: string): {
+	db: BaseSQLiteDatabase<"sync", void, typeof sqliteSchema>;
+	destroy: () => Promise<void>;
+} {
 	// const sqlite = new Database("test-" + key + ".db");
 	const sqlite = new Database(":memory:");
 
@@ -46,12 +49,18 @@ export function setupMemoryDb(
 			"updatedAt" integer NOT NULL
 		);`);
 	} catch (e) {}
-	return db;
+	return {
+		db,
+		async destroy() {
+			sqlite.close();
+		},
+	};
 }
 
 export function setupPgliteDb(): {
 	db: PgDatabase<PgQueryResultHKT, typeof pgSchema>;
 	setup: () => Promise<void>;
+	destroy: () => Promise<void>;
 } {
 	const client = new PGlite();
 
@@ -80,6 +89,9 @@ export function setupPgliteDb(): {
 		);
 		`);
 		},
+		async destroy() {
+			await client.close();
+		},
 	};
 }
 
@@ -91,8 +103,43 @@ export function setupGelDb() {
 	});
 
 	async function setup() {
-		await db.delete(gelSchema.comment).execute();
-		await db.delete(gelSchema.article).execute();
+		const article = await db
+			.select()
+			.from(gelSchema.article)
+			.where(eq(gelSchema.article.slug, TEST_ARTICLE.slug))
+			.execute()
+			.then((res) => res.at(0));
+
+		if (article) {
+			await db
+				.delete(gelSchema.comment)
+				.where(eq(gelSchema.comment.articleId, article.id))
+				.execute();
+
+			await db
+				.delete(gelSchema.article)
+				.where(eq(gelSchema.article.slug, TEST_ARTICLE.slug))
+				.execute();
+		}
+
+		const anotherArticle = await db
+			.select()
+			.from(gelSchema.article)
+			.where(eq(gelSchema.article.slug, ANOTHER_ARTICLE.slug))
+			.execute()
+			.then((res) => res.at(0));
+
+		if (anotherArticle) {
+			await db
+				.delete(gelSchema.comment)
+				.where(eq(gelSchema.comment.articleId, anotherArticle.id))
+				.execute();
+
+			await db
+				.delete(gelSchema.article)
+				.where(eq(gelSchema.article.slug, anotherArticle.slug))
+				.execute();
+		}
 	}
 
 	return { db, setup };
