@@ -28,7 +28,10 @@ function createFakeCommentRepo(
 			}
 			return comment;
 		},
-		async deleteBySlug(slug: string, id: Comment["id"]): Promise<undefined> {
+		async deleteBySlugAndId(
+			slug: string,
+			id: Comment["id"],
+		): Promise<undefined> {
 			const comments = state[slug] ?? [];
 
 			state[slug] = comments.filter((item) => item.id !== id);

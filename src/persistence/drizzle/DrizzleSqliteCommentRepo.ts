@@ -60,7 +60,7 @@ function createDrizzleSqliteCommentRepo(
 
 			return updated;
 		},
-		async deleteBySlug(slug, id) {
+		async deleteBySlugAndId(slug, id) {
 			const old = await preparedGet.get({ targetSlug: slug, commentId: id });
 
 			if (old) {

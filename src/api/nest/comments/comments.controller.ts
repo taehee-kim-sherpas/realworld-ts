@@ -72,6 +72,6 @@ export class CommentsController {
 		@Param("slug") slug: string,
 		@Param("id") id: string,
 	): Promise<void> {
-		await this.ctx.repo.comment.deleteBySlug(slug, id);
+		await this.ctx.repo.comment.deleteBySlugAndId(slug, id);
 	}
 }

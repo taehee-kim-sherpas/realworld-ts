@@ -18,5 +18,5 @@ export interface CommentRepo {
 		id: Comment["id"],
 		update: (old: Comment | undefined) => Comment,
 	): Promise<Comment>;
-	deleteBySlug(slug: string, id: Comment["id"]): Promise<undefined>;
+	deleteBySlugAndId(slug: string, id: Comment["id"]): Promise<undefined>;
 }

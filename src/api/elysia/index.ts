@@ -175,7 +175,7 @@ export function createApp(ctx: AppContext) {
 					throw new NotExistError(`Article for slug=${targetSlug}`);
 				}
 
-				await ctx.repo.comment.deleteBySlug(targetSlug, id);
+				await ctx.repo.comment.deleteBySlugAndId(targetSlug, id);
 
 				return new Response("", { status: 204 });
 			},

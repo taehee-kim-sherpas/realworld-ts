@@ -94,7 +94,7 @@ export function registerComments(ctx: AppContext) {
 				async (request, reply) => {
 					const { slug, id } = request.params;
 
-					await ctx.repo.comment.deleteBySlug(slug, id);
+					await ctx.repo.comment.deleteBySlugAndId(slug, id);
 
 					return "";
 				},

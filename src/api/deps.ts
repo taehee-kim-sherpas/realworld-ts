@@ -6,6 +6,9 @@ import * as sqliteSchema from "../persistence/drizzle/sqliteSchema.ts";
 import * as pgSchema from "../persistence/drizzle/pgSchema.ts";
 import type { PgDatabase, PgQueryResultHKT } from "drizzle-orm/pg-core";
 import type { BaseSQLiteDatabase } from "drizzle-orm/sqlite-core/db";
+import { drizzle as drizzleGel } from "drizzle-orm/gel";
+import { createClient } from "gel";
+import * as gelSchema from "../persistence/drizzle/gelSchema.ts";
 
 export function setupMemoryDb(
 	_key: string,
@@ -71,4 +74,19 @@ export function setupPgliteDb(): {
 		`);
 		},
 	};
+}
+
+export function setupGelDb() {
+	const gelClient = createClient();
+	const db = drizzleGel<typeof gelSchema>({
+		client: gelClient,
+		schema: gelSchema,
+	});
+
+	async function setup() {
+		await db.delete(gelSchema.comment).execute();
+		await db.delete(gelSchema.article).execute();
+	}
+
+	return { db, setup };
 }

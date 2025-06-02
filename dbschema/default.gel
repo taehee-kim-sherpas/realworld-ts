@@ -1,0 +1,24 @@
+module default {
+    type article {
+        required slug: str {
+            constraint exclusive;
+        };
+        required title: str;
+        required description: str;
+        required body: str;
+        required createdAt: datetime;
+        required updatedAt: datetime;
+        multi comments := .<article[is comment];
+        index on (.slug);
+    }
+    type comment {
+        required commentId: str {
+            constraint exclusive;
+        };
+        required body: str;
+        required createdAt: datetime;
+        required updatedAt: datetime;
+        required link article: article;
+        index on (.commentId);
+    }
+}

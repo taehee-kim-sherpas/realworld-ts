@@ -56,7 +56,7 @@ export function createDrizzlePgCommentRepo(
 
 			return updated;
 		},
-		async deleteBySlug(slug, id) {
+		async deleteBySlugAndId(slug, id) {
 			const old = await preparedGet.execute({
 				targetSlug: slug,
 				commentId: id,

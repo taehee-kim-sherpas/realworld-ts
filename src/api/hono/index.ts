@@ -152,7 +152,7 @@ export function createApp(ctx: AppContext) {
 			async (c) => {
 				const { id, slug } = c.req.valid("param");
 
-				await ctx.repo.comment.deleteBySlug(slug, id);
+				await ctx.repo.comment.deleteBySlugAndId(slug, id);
 
 				return new Response("", {
 					status: 204,

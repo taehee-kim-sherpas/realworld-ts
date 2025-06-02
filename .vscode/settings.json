@@ -3,6 +3,7 @@
         "elysia",
         "elysiajs",
         "Pglite",
+        "timestamptz",
         "typebox",
         "valibot"
     ]

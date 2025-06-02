@@ -14,6 +14,7 @@ import {
 } from "../../schema/typebox/articles";
 import { createArticle, updateArticle } from "../../domain/articles/Article";
 import { t } from "elysia";
+import { AlreadyExistError, NotExistError } from "../../domain/errors";
 
 type FastifyTypebox = FastifyInstance<
 	RawServerDefault,
@@ -53,24 +54,13 @@ export function registerArticles(ctx: AppContext) {
 				async (request, reply) => {
 					const article = createArticle(request.body.article, ctx);
 
-					const result = await ctx.repo.article.saveBySlug(
-						article.slug,
-						(old) => {
-							if (old) {
-								return "already-exist";
-							}
+					await ctx.repo.article.saveBySlug(article.slug, (old) => {
+						if (old) {
+							throw new AlreadyExistError(article.slug);
+						}
 
-							return article;
-						},
-					);
-
-					if (result === "already-exist") {
-						return reply
-							.code(409)
-							.send(
-								`CONFLICT: slug ${ctx.slugify(request.body.article.title)}`,
-							);
-					}
+						return article;
+					});
 
 					return { article };
 				},
@@ -119,20 +109,13 @@ export function registerArticles(ctx: AppContext) {
 						slug,
 						(oldArticle) => {
 							if (oldArticle === undefined) {
-								return "not-found";
+								throw new NotExistError("");
 							}
 
 							return updateArticle(oldArticle, request.body.article, ctx);
 						},
 					);
 
-					if (result === "already-exist") {
-						throw Error("NEVER");
-					}
-
-					if (result === "not-found") {
-						return reply.status(404).send("NOT_FOUND");
-					}
 					return { article: result };
 				},
 			)
@@ -152,14 +135,20 @@ export function registerArticles(ctx: AppContext) {
 				async (request, reply) => {
 					const slug = request.params.slug;
 
-					const result = await ctx.repo.article.deleteBySlug(slug);
+					await ctx.repo.article.deleteBySlug(slug);
 
-					if (result === "not-found") {
-						return reply.status(404).send("NOT_FOUND");
-					}
 					return "";
 				},
-			);
+			)
+			.setErrorHandler((error, request, reply) => {
+				if (error instanceof AlreadyExistError) {
+					return reply.code(409).send(error.message);
+				}
+				if (error instanceof NotExistError) {
+					return reply.code(404).send(error.message);
+				}
+				return reply.code(500).send(String(error));
+			});
 
 		done();
 	};

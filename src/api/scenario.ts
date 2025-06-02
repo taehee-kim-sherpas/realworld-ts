@@ -9,11 +9,13 @@ import {
 } from "../domain/fixtures";
 import { createFakeContext, type TestContext } from "./context";
 import { createFetchClient, type FetchClient } from "./fetchClient";
-import { setupMemoryDb, setupPgliteDb } from "./deps";
+import { setupMemoryDb, setupPgliteDb, setupGelDb } from "./deps";
 import createDrizzleSqliteArticleRepo from "../persistence/drizzle/DrizzleSqliteArticleRepo";
 import { createDrizzlePgArticleRepo } from "../persistence/drizzle/DrizzlePgArticleRepo";
 import createDrizzleSqliteCommentRepo from "../persistence/drizzle/DrizzleSqliteCommentRepo";
 import createDrizzlePgCommentRepo from "../persistence/drizzle/DrizzlePgCommentRepo";
+import { createDrizzleGelArticleRepo } from "../persistence/drizzle/DrizzleGelArticleRepo";
+import { createDrizzleGelCommentRepo } from "../persistence/drizzle/DrizzleGelCommentRepo";
 
 export function runTestScenario(
 	implName: string,
@@ -254,46 +256,68 @@ export function runTest(
 		};
 	});
 
-	// runTestScenario(`${appName} api - drizzle sqlite`, () => {
-	//   const sqliteDb = setupMemoryDb(appName);
-	//   const drizzleSqliteRepoContext = createFakeContext({
-	//     repo: {
-	//       article: createDrizzleSqliteArticleRepo(sqliteDb),
-	//       comment: createDrizzleSqliteCommentRepo(sqliteDb),
-	//     },
-	//   });
-	//   const drizzleSqliteApp = createApp(drizzleSqliteRepoContext);
+	runTestScenario(`${appName} api - drizzle sqlite`, () => {
+		const sqliteDb = setupMemoryDb(appName);
+		const drizzleSqliteRepoContext = createFakeContext({
+			repo: {
+				article: createDrizzleSqliteArticleRepo(sqliteDb),
+				comment: createDrizzleSqliteCommentRepo(sqliteDb),
+			},
+		});
+		const drizzleSqliteApp = createApp(drizzleSqliteRepoContext);
 
-	//   return {
-	//     client: createFetchClient((request) =>
-	//       drizzleSqliteApp.then((app) => app.fetch(request))
-	//     ),
-	//     context: drizzleSqliteRepoContext,
-	//     teardown: async () => {
-	//       await drizzleSqliteApp.then((app) => app.teardown?.());
-	//     },
-	//   };
-	// });
+		return {
+			client: createFetchClient((request) =>
+				drizzleSqliteApp.then((app) => app.fetch(request)),
+			),
+			context: drizzleSqliteRepoContext,
+			teardown: async () => {
+				await drizzleSqliteApp.then((app) => app.teardown?.());
+			},
+		};
+	});
 
-	// runTestScenario(`${appName} api - drizzle Pg`, () => {
-	//   const pgDb = setupPgliteDb();
-	//   const drizzlePgRepoContext = createFakeContext({
-	//     repo: {
-	//       article: createDrizzlePgArticleRepo(pgDb.db),
-	//       comment: createDrizzlePgCommentRepo(pgDb.db),
-	//     },
-	//     setup: pgDb.setup,
-	//   });
-	//   const drizzlePgApp = createApp(drizzlePgRepoContext);
+	runTestScenario(`${appName} api - drizzle Pg`, () => {
+		const pgDb = setupPgliteDb();
+		const drizzlePgRepoContext = createFakeContext({
+			repo: {
+				article: createDrizzlePgArticleRepo(pgDb.db),
+				comment: createDrizzlePgCommentRepo(pgDb.db),
+			},
+			setup: pgDb.setup,
+		});
+		const drizzlePgApp = createApp(drizzlePgRepoContext);
 
-	//   return {
-	//     client: createFetchClient((request) =>
-	//       drizzlePgApp.then((app) => app.fetch(request))
-	//     ),
-	//     context: drizzlePgRepoContext,
-	//     teardown: async () => {
-	//       await drizzlePgApp.then((app) => app.teardown?.());
-	//     },
-	//   };
-	// });
+		return {
+			client: createFetchClient((request) =>
+				drizzlePgApp.then((app) => app.fetch(request)),
+			),
+			context: drizzlePgRepoContext,
+			teardown: async () => {
+				await drizzlePgApp.then((app) => app.teardown?.());
+			},
+		};
+	});
+
+	runTestScenario(`${appName} api - drizzle gel`, () => {
+		const { db, setup } = setupGelDb();
+		const gelRepoContext = createFakeContext({
+			repo: {
+				article: createDrizzleGelArticleRepo(db),
+				comment: createDrizzleGelCommentRepo(db),
+			},
+			setup,
+		});
+		const gelApp = createApp(gelRepoContext);
+
+		return {
+			client: createFetchClient((request) =>
+				gelApp.then((app) => app.fetch(request)),
+			),
+			context: gelRepoContext,
+			teardown: async () => {
+				await gelApp.then((app) => app.teardown?.());
+			},
+		};
+	});
 }

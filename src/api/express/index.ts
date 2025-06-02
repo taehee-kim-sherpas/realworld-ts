@@ -126,7 +126,7 @@ export function createServer(ctx: AppContext) {
 			async (req, res) => {
 				const { slug, id } = req.params;
 
-				await ctx.repo.comment.deleteBySlug(slug, id);
+				await ctx.repo.comment.deleteBySlugAndId(slug, id);
 
 				res.status(204).send("");
 			},
