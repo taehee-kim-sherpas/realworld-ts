@@ -3,7 +3,10 @@ import { Test } from "@nestjs/testing";
 import { ArticlesModule } from "./articles/articles.module.ts";
 import type { AppContext } from "../context.ts";
 import { CommentsModule } from "./comments/comments.module.ts";
-import { DomainErrorFilter } from "./filters.ts";
+import {
+	AlreadyExistErrorFilter,
+	TypeboxValidationExceptionFilter,
+} from "./filters.ts";
 
 export async function setupTestServer(ctx: AppContext) {
 	const moduleRef = await Test.createTestingModule({
@@ -14,6 +17,8 @@ export async function setupTestServer(ctx: AppContext) {
 		.compile();
 
 	const app = moduleRef.createNestApplication();
+	app.useGlobalFilters(new TypeboxValidationExceptionFilter());
+	app.useGlobalFilters(new AlreadyExistErrorFilter());
 	await app.init();
 	return {
 		async fetch(request: Request): Promise<Response> {

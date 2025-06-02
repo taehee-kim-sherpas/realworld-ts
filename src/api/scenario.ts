@@ -44,19 +44,24 @@ export function runTestScenario(
 		});
 
 		it("404 invalid route", async () => {
-			await expect(client.post("/api/atciel", {})).rejects.toThrow();
+			expect(
+				await client.post("/api/atciel", {}).then((res) => res.status),
+			).toBe(404);
 		});
 
 		it("404 not exist", async () => {
 			const id = "not-exist";
-			await expect(
-				client.get(`/api/articles/${id}`).catch((res) => res.status),
-			).resolves.toBe(404);
+			expect(
+				await client
+					.get(`/api/articles/${id}`)
+					.then((res) => (res as Response).status),
+			).toBe(404);
 		});
 
 		it("validation", async () => {
-			const promise = client.post("/api/articles", {});
-			await expect(promise).rejects.toThrow();
+			expect(
+				await client.post("/api/articles", {}).then((res) => res.status),
+			).toBe(422);
 		});
 
 		it("Article", async () => {
@@ -94,7 +99,7 @@ export function runTestScenario(
 						.post("/api/articles", {
 							article: CREATE_ARTICLE,
 						})
-						.catch((res) => res.status),
+						.then((res) => res.status),
 				).toBe(409);
 
 				logs.push(`before update GET /api/articles/${TEST_ARTICLE.slug}`);

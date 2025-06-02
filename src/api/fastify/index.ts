@@ -9,6 +9,8 @@ import { registerComments } from "./comments.ts";
 import swagger from "@fastify/swagger";
 import swaggerUi from "@fastify/swagger-ui";
 import { createFakeContext, type AppContext } from "../context";
+import { AlreadyExistError, NotExistError } from "../../domain/errors.ts";
+import type { FastifySchemaValidationError } from "fastify/types/schema";
 
 export function createFastify(ctx: AppContext) {
 	return Fastify({
@@ -19,6 +21,34 @@ export function createFastify(ctx: AppContext) {
 		.register(registerArticles(ctx), { prefix: "/api/articles" })
 		.register(registerComments(ctx), {
 			prefix: "/api/articles/:slug/comments",
+		})
+		.setErrorHandler((error, request, reply) => {
+			if (error.validation) {
+				const structuredErrors: {
+					keyword: string;
+					schemaErrors: FastifySchemaValidationError[];
+					message: string;
+				}[] = [
+					{
+						keyword: "validation",
+						schemaErrors: error.validation,
+						message: error.message,
+					},
+				];
+
+				return reply
+					.code(422)
+					.headers({ "content-type": "application/json" })
+					.send(JSON.stringify(structuredErrors));
+			}
+
+			if (error instanceof AlreadyExistError) {
+				return reply.code(409).send(error.message);
+			}
+			if (error instanceof NotExistError) {
+				return reply.code(404).send(error.message);
+			}
+			return reply.code(500).send(String(error));
 		});
 }
 

@@ -1,4 +1,4 @@
-import { Hono } from "hono";
+import { Hono, ValidationTargets } from "hono";
 import * as v from "valibot";
 import { prettyJSON } from "hono/pretty-json";
 import slugify from "cjk-slug";
@@ -21,6 +21,26 @@ import {
 	newCommentRequestDto,
 	singleCommentResponseDto,
 } from "../../schema/valibot/commentsDto";
+import { BaseIssue, GenericSchema, GenericSchemaAsync } from "valibot";
+
+function validator<
+	T extends
+		| GenericSchema<unknown, unknown, BaseIssue<unknown>>
+		| GenericSchemaAsync<unknown, unknown, BaseIssue<unknown>>,
+	Target extends keyof ValidationTargets,
+>(key: Target, schema: T) {
+	return vValidator(key, schema, (result, c) => {
+		if (result.success === false) {
+			c.status(422);
+			return c.json({
+				statusCode: 422,
+				timestamp: new Date().toISOString(),
+				path: c.req.url.toString(),
+				message: result.issues,
+			});
+		}
+	});
+}
 
 export function createApp(ctx: AppContext) {
 	const app = new Hono()
@@ -40,7 +60,7 @@ export function createApp(ctx: AppContext) {
 			simpleRoute({
 				res: singleArticleResponseDto,
 			}),
-			vValidator("json", updateNewArticleRequestDto),
+			validator("json", updateNewArticleRequestDto),
 			async (c) => {
 				const reqDto = c.req.valid("json");
 
@@ -62,8 +82,8 @@ export function createApp(ctx: AppContext) {
 			simpleRoute({
 				res: singleArticleResponseDto,
 			}),
-			vValidator("param", v.object({ slug: v.string() })),
-			vValidator("json", updateNewArticleRequestDto),
+			validator("param", v.object({ slug: v.string() })),
+			validator("json", updateNewArticleRequestDto),
 			async (c) => {
 				const { slug } = c.req.valid("param");
 				const reqDto = c.req.valid("json");
@@ -84,7 +104,7 @@ export function createApp(ctx: AppContext) {
 			simpleRoute({
 				res: singleArticleResponseDto,
 			}),
-			vValidator("param", v.object({ slug: v.string() })),
+			validator("param", v.object({ slug: v.string() })),
 			async (c) => {
 				const { slug } = c.req.valid("param");
 
@@ -99,7 +119,7 @@ export function createApp(ctx: AppContext) {
 		)
 		.delete(
 			"/api/articles/:slug",
-			vValidator("param", v.object({ slug: v.string() })),
+			validator("param", v.object({ slug: v.string() })),
 			async (c) => {
 				const { slug } = c.req.valid("param");
 
@@ -115,7 +135,7 @@ export function createApp(ctx: AppContext) {
 			simpleRoute({
 				res: multipleCommentsResponseDto,
 			}),
-			vValidator("param", v.object({ slug: v.string() })),
+			validator("param", v.object({ slug: v.string() })),
 			async (c) => {
 				const { slug } = c.req.valid("param");
 
@@ -129,8 +149,8 @@ export function createApp(ctx: AppContext) {
 			simpleRoute({
 				res: singleCommentResponseDto,
 			}),
-			vValidator("param", v.object({ slug: v.string() })),
-			vValidator("json", newCommentRequestDto),
+			validator("param", v.object({ slug: v.string() })),
+			validator("json", newCommentRequestDto),
 			async (c) => {
 				const { slug } = c.req.valid("param");
 				const dto = c.req.valid("json");
@@ -148,7 +168,7 @@ export function createApp(ctx: AppContext) {
 		)
 		.delete(
 			"/api/articles/:slug/comments/:id",
-			vValidator("param", v.object({ slug: v.string(), id: v.string() })),
+			validator("param", v.object({ slug: v.string(), id: v.string() })),
 			async (c) => {
 				const { id, slug } = c.req.valid("param");
 

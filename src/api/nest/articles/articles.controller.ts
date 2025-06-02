@@ -8,9 +8,7 @@ import {
 	Body,
 	Inject,
 	NotFoundException,
-	ConflictException,
 	HttpCode,
-	UseFilters,
 } from "@nestjs/common";
 import * as t from "@sinclair/typebox";
 import {
@@ -26,7 +24,7 @@ import {
 import type { AppContext } from "../../context";
 import { Validate } from "nestjs-typebox";
 import { AlreadyExistError } from "../../../domain/errors";
-import { DomainErrorFilter } from "../filters";
+import { AlreadyExistErrorFilter } from "../filters";
 
 @Controller("api/articles")
 export class ArticlesController {
@@ -54,7 +52,6 @@ export class ArticlesController {
 	}
 
 	@Post()
-	@UseFilters(new DomainErrorFilter())
 	@Validate({
 		request: [
 			{ name: "body", type: "body", schema: CreateUpdateArticleRequestBody },

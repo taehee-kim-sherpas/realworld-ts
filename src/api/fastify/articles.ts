@@ -139,16 +139,7 @@ export function registerArticles(ctx: AppContext) {
 
 					return "";
 				},
-			)
-			.setErrorHandler((error, request, reply) => {
-				if (error instanceof AlreadyExistError) {
-					return reply.code(409).send(error.message);
-				}
-				if (error instanceof NotExistError) {
-					return reply.code(404).send(error.message);
-				}
-				return reply.code(500).send(String(error));
-			});
+			);
 
 		done();
 	};

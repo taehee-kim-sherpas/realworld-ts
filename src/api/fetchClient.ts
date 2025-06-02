@@ -19,7 +19,7 @@ export function createFetchClient(
 			return res.text();
 		}
 
-		throw res;
+		return res;
 	}
 
 	async function request(
@@ -39,11 +39,7 @@ export function createFetchClient(
 			}),
 		);
 
-		if (res.ok) {
-			return res;
-		}
-
-		throw res;
+		return res;
 	}
 
 	async function post(path: string, data: unknown) {

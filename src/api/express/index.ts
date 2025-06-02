@@ -4,7 +4,7 @@ import express, {
 	type Response,
 } from "express";
 import type { AppContext } from "../context";
-import { validateRequest } from "./typebox-middleware";
+import { TypeboxError, validateRequest } from "./typebox-middleware";
 import { createArticle, updateArticle } from "../../domain/articles/Article";
 import { CreateUpdateArticleRequestBody } from "../../schema/typebox/articles";
 import { t } from "elysia";
@@ -133,6 +133,11 @@ export function createServer(ctx: AppContext) {
 		);
 
 	app.use((error: Error, req: Request, res: Response, next: NextFunction) => {
+		if (error instanceof TypeboxError) {
+			res.status(422).send(error.message);
+			return;
+		}
+
 		if (error instanceof NotExistError) {
 			res.status(404).send("NOT_FOUND");
 			return;

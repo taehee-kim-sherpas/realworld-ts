@@ -28,10 +28,6 @@ export function createApp(ctx: AppContext) {
 				case "NotExistError":
 					return status("Not Found");
 			}
-
-			return new Response(String(error), {
-				status: 500,
-			});
 		})
 		.get(
 			"/api/articles",
@@ -83,14 +79,14 @@ export function createApp(ctx: AppContext) {
 		)
 		.put(
 			"/api/articles/:slug",
-			async ({ params: { slug }, body, request }) => {
+			async ({ params: { slug }, body }) => {
 				const targetSlug = decodeURIComponent(slug);
 
 				const article = await ctx.repo.article.saveBySlug(
 					targetSlug,
 					(oldArticle) => {
 						if (oldArticle === undefined) {
-							throw new NotExistError(`NOT FOUND: ${request.url.toString()}`);
+							throw new NotExistError(`Article for slug=${targetSlug}`);
 						}
 
 						return updateArticle(oldArticle, body.article, ctx);
