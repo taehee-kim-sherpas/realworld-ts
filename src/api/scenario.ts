@@ -16,6 +16,12 @@ import createDrizzleSqliteCommentRepo from "../persistence/drizzle/DrizzleSqlite
 import createDrizzlePgCommentRepo from "../persistence/drizzle/DrizzlePgCommentRepo";
 import { createDrizzleGelArticleRepo } from "../persistence/drizzle/DrizzleGelArticleRepo";
 import { createDrizzleGelCommentRepo } from "../persistence/drizzle/DrizzleGelCommentRepo";
+import createKyselyArticleRepo from "../persistence/drizzle/DrizzleKyselyArticleRepo";
+import createKyselyCommentRepo from "../persistence/drizzle/DrizzleKyselyCommentRepo";
+import { setupKyselySqliteDb } from "./deps";
+import { TypeormArticleRepo } from "../persistence/typeorm/TypeormArticleRepo";
+import { TypeormCommentRepo } from "../persistence/typeorm/TypeormCommentRepo";
+import { setupTypeormSqliteDb } from "./deps";
 
 export function runTestScenario(
 	implName: string,
@@ -317,6 +323,53 @@ export function runTest(
 			context: gelRepoContext,
 			teardown: async () => {
 				await gelApp.then((app) => app.teardown?.());
+			},
+		};
+	});
+
+	runTestScenario(`${appName} api - kysely sqlite`, () => {
+		const kyselyDb = setupKyselySqliteDb();
+		const kyselyRepoContext = createFakeContext({
+			repo: {
+				article: createKyselyArticleRepo(kyselyDb),
+				comment: createKyselyCommentRepo(kyselyDb),
+			},
+		});
+		const kyselyApp = createApp(kyselyRepoContext);
+
+		return {
+			client: createFetchClient((request) =>
+				kyselyApp.then((app) => app.fetch(request)),
+			),
+			context: kyselyRepoContext,
+			teardown: async () => {
+				await kyselyApp.then((app) => app.teardown?.());
+			},
+		};
+	});
+
+	runTestScenario(`${appName} api - typeorm sqlite`, () => {
+		const dataSource = setupTypeormSqliteDb();
+
+		const typeormRepoContext = createFakeContext({
+			repo: {
+				article: new TypeormArticleRepo(dataSource),
+				comment: new TypeormCommentRepo(dataSource),
+			},
+		});
+
+		const appPromise = dataSource
+			.initialize()
+			.then(() => createApp(typeormRepoContext));
+
+		return {
+			client: createFetchClient((request) =>
+				appPromise.then((app) => app.fetch(request)),
+			),
+			context: typeormRepoContext,
+			teardown: async () => {
+				await appPromise.then((app) => app.teardown?.());
+				await dataSource?.destroy?.();
 			},
 		};
 	});

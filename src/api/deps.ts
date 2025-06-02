@@ -1,3 +1,4 @@
+import "reflect-metadata";
 import Database from "bun:sqlite";
 import { drizzle as drizzleSqlite } from "drizzle-orm/bun-sqlite/driver";
 import { PGlite } from "@electric-sql/pglite";
@@ -9,6 +10,12 @@ import type { BaseSQLiteDatabase } from "drizzle-orm/sqlite-core/db";
 import { drizzle as drizzleGel } from "drizzle-orm/gel";
 import { createClient } from "gel";
 import * as gelSchema from "../persistence/drizzle/gelSchema.ts";
+import { Kysely } from "kysely";
+import type { Database as KyselyDatabase } from "../persistence/drizzle/kyselySchema";
+import { BunSqliteDialect } from "kysely-bun-sqlite";
+import { DataSource } from "typeorm";
+import { ArticleEntity } from "../persistence/typeorm/ArticleEntity";
+import { CommentEntity } from "../persistence/typeorm/CommentEntity";
 
 export function setupMemoryDb(
 	_key: string,
@@ -89,4 +96,43 @@ export function setupGelDb() {
 	}
 
 	return { db, setup };
+}
+
+export function setupKyselySqliteDb() {
+	const sqlite = new Database(":memory:");
+	const db = new Kysely<KyselyDatabase>({
+		dialect: new BunSqliteDialect({ database: sqlite }),
+	});
+
+	db.schema
+		.createTable("articles")
+		.addColumn("slug", "text", (col) => col.primaryKey().notNull())
+		.addColumn("title", "text", (col) => col.notNull())
+		.addColumn("description", "text", (col) => col.notNull())
+		.addColumn("body", "text", (col) => col.notNull())
+		.addColumn("createdAt", "integer", (col) => col.notNull())
+		.addColumn("updatedAt", "integer", (col) => col.notNull())
+		.execute()
+		.then(() =>
+			db.schema
+				.createTable("comments")
+				.addColumn("id", "text", (col) => col.primaryKey().notNull())
+				.addColumn("articleSlug", "text", (col) => col.notNull())
+				.addColumn("body", "text", (col) => col.notNull())
+				.addColumn("createdAt", "integer", (col) => col.notNull())
+				.addColumn("updatedAt", "integer", (col) => col.notNull())
+				.execute(),
+		);
+
+	return db;
+}
+
+export function setupTypeormSqliteDb() {
+	const dataSource = new DataSource({
+		type: "sqlite",
+		database: ":memory:",
+		entities: [ArticleEntity, CommentEntity],
+		synchronize: true,
+	});
+	return dataSource;
 }

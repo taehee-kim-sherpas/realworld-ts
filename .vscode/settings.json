@@ -2,9 +2,12 @@
     "cSpell.words": [
         "elysia",
         "elysiajs",
+        "Insertable",
+        "kysely",
         "Pglite",
         "timestamptz",
         "typebox",
+        "Updateable",
         "valibot"
     ]
 }
