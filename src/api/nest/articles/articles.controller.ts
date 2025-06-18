@@ -13,8 +13,8 @@ import {
 import * as t from "@sinclair/typebox";
 import {
 	CreateUpdateArticleRequestBody,
-	MultipleArticlesResponse,
-	SingleArticleResponse,
+	type MultipleArticlesResponse,
+	type SingleArticleResponse,
 } from "../../../schema/typebox/articles";
 import {
 	createArticle,
@@ -24,7 +24,6 @@ import {
 import type { AppContext } from "../../context";
 import { Validate } from "nestjs-typebox";
 import { AlreadyExistError } from "../../../domain/errors";
-import { AlreadyExistErrorFilter } from "../filters";
 
 @Controller("api/articles")
 export class ArticlesController {

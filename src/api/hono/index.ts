@@ -1,4 +1,4 @@
-import { Hono, ValidationTargets } from "hono";
+import { Hono, type ValidationTargets } from "hono";
 import * as v from "valibot";
 import { prettyJSON } from "hono/pretty-json";
 import slugify from "cjk-slug";
@@ -21,7 +21,7 @@ import {
 	newCommentRequestDto,
 	singleCommentResponseDto,
 } from "../../schema/valibot/commentsDto";
-import { BaseIssue, GenericSchema, GenericSchemaAsync } from "valibot";
+import type { BaseIssue, GenericSchema, GenericSchemaAsync } from "valibot";
 
 function validator<
 	T extends
