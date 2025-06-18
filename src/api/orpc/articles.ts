@@ -2,6 +2,7 @@ import { os } from "@orpc/server";
 import * as t from "@sinclair/typebox";
 import { createArticle, updateArticle } from "../../domain/articles/Article";
 import {
+	Article,
 	CreateUpdateArticleRequestBody,
 	MultipleArticlesResponse,
 	SingleArticleResponse,
@@ -58,12 +59,10 @@ export const createArticlesRoutes = (ctx: AppContext) => ({
 		})
 		.input(
 			StandardDecodeSchema(
-				t.Intersect([
-					CreateUpdateArticleRequestBody,
-					t.Object({
-						slug: t.String(),
-					}),
-				]),
+				t.Object({
+					article: t.Pick(Article, ["title", "description", "body"]),
+					slug: t.String(),
+				}),
 			),
 		)
 		.output(SingleArticleResponse)

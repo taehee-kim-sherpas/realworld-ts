@@ -54,6 +54,8 @@ export function createApp(ctx: AppContext) {
 							}),
 						} as unknown as StandardHandleResult;
 					}
+
+					console.error("hey", error);
 					throw error;
 				}
 			},

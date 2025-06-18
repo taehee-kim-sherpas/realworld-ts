@@ -56,7 +56,7 @@ function CreateIssues(error: unknown): StandardSchemaV1.Issue[] {
 // Validate
 // ------------------------------------------------------------------
 // prettier-ignore
-function CreateValidator<Type extends TSchema>(
+function CreateEncodeValidator<Type extends TSchema>(
 	schema: Type,
 	references: TSchema[],
 ): (
@@ -76,6 +76,28 @@ function CreateValidator<Type extends TSchema>(
 		}
 	};
 }
+
+function CreateDecodeValidator<Type extends TSchema>(
+	schema: Type,
+	references: TSchema[],
+): (
+	value: unknown,
+) =>
+	| StandardSchemaV1.SuccessResult<StaticDecode<Type>>
+	| StandardSchemaV1.FailureResult {
+	return (
+		value: unknown,
+	):
+		| StandardSchemaV1.SuccessResult<StaticDecode<Type>>
+		| StandardSchemaV1.FailureResult => {
+		try {
+			return { value: Value.Decode(schema, references, value) };
+		} catch (error) {
+			return { issues: CreateIssues(error) };
+		}
+	};
+}
+
 export function StandardEncodeSchema<Type extends TSchema>(
 	schema: Type,
 	references: TSchema[] = [],
@@ -83,7 +105,7 @@ export function StandardEncodeSchema<Type extends TSchema>(
 	const standard = {
 		version: 1,
 		vendor: "TypeBox",
-		validate: CreateValidator(schema, references),
+		validate: CreateEncodeValidator(schema, references),
 	};
 	return Object.defineProperty(CloneType(schema), "~standard", {
 		enumerable: false,
@@ -98,7 +120,7 @@ export function StandardDecodeSchema<Type extends TSchema>(
 	const standard = {
 		version: 1,
 		vendor: "TypeBox",
-		validate: CreateValidator(schema, references),
+		validate: CreateDecodeValidator(schema, references),
 	};
 	return Object.defineProperty(CloneType(schema), "~standard", {
 		enumerable: false,
