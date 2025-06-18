@@ -1,5 +1,5 @@
 import type { Article } from "./articles/Article.ts";
-import { Comment } from "./articles/comments/Comment.ts";
+import type { Comment } from "./articles/comments/Comment.ts";
 
 export const TEST_ARTICLE: Article = {
 	title: "TDD, 테스트 주도 개발",

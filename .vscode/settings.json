@@ -3,6 +3,7 @@
         "elysia",
         "elysiajs",
         "Insertable",
+        "Jsonified",
         "kysely",
         "orpc",
         "Pglite",

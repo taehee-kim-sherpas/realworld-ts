@@ -5,40 +5,65 @@ import createFakeCommentRepo from "../../persistence/FakeCommentRepo";
 import { OpenAPIHandler } from "@orpc/openapi/fetch";
 import { createArticlesRoutes } from "./articles";
 import { createCommentsRoutes } from "./comments";
+import { AlreadyExistError, NotExistError } from "../../domain/errors";
+import type { StandardHandleResult } from "@orpc/server/standard";
+import { ORPCError } from "@orpc/server";
 
-export function createApp(ctx: AppContext) {
-	const router = {
+export function createRouter(ctx: AppContext) {
+	return {
 		articles: {
 			...createArticlesRoutes(ctx),
 			comments: createCommentsRoutes(ctx),
 		},
 	};
+}
 
-	const handler = new OpenAPIHandler(router);
+export function createApp(ctx: AppContext) {
+	const router = createRouter(ctx);
+
+	const handler = new OpenAPIHandler(router, {
+		interceptors: [
+			async (options) => {
+				try {
+					return await options.next();
+				} catch (error) {
+					if (error instanceof NotExistError) {
+						return {
+							matched: true,
+							response: new Response(error.message, {
+								status: 404,
+							}),
+						} as unknown as StandardHandleResult;
+					}
+					if (error instanceof AlreadyExistError) {
+						return {
+							matched: true,
+							response: new Response(error.message, {
+								status: 409,
+							}),
+						} as unknown as StandardHandleResult;
+					}
+					if (
+						error instanceof ORPCError &&
+						error.message === "Input validation failed"
+					) {
+						return {
+							matched: true,
+							response: new Response(error.message, {
+								status: 422,
+							}),
+						} as unknown as StandardHandleResult;
+					}
+					throw error;
+				}
+			},
+		],
+	});
 
 	return {
 		fetch: (request: Request) =>
 			handler.handle(request).then(async (result) => {
 				if (result.matched) {
-					if (result.response.status === 400) {
-						// biome-ignore lint/suspicious/noExplicitAny: <explanation>
-						const body = (await result.response.json()) as any;
-						if (body.message === "Input validation failed") {
-							return new Response(JSON.stringify(body.data), {
-								status: 422,
-								headers: {
-									"Content-Type": "application/json",
-								},
-							});
-						}
-
-						return new Response(JSON.stringify(body), {
-							status: 400,
-							headers: {
-								"Content-Type": "application/json",
-							},
-						});
-					}
 					return result.response;
 				}
 

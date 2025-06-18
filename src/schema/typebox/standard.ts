@@ -26,12 +26,7 @@ THE SOFTWARE.
 
 ---------------------------------------------------------------------------*/
 
-import {
-	AssertError,
-	Value,
-	type ValueError,
-	ValueErrorType,
-} from "@sinclair/typebox/value";
+import { AssertError, Value } from "@sinclair/typebox/value";
 import {
 	type TSchema,
 	type StaticDecode,
@@ -43,11 +38,7 @@ import type { StandardSchemaV1 } from "@standard-schema/spec";
 // Issues
 // ------------------------------------------------------------------
 // prettier-ignore
-function CreateIssues(
-	schema: TSchema,
-	value: unknown,
-	error: unknown,
-): StandardSchemaV1.Issue[] {
+function CreateIssues(error: unknown): StandardSchemaV1.Issue[] {
 	const isAssertError = error instanceof AssertError ? error : undefined;
 	return !isAssertError
 		? [
@@ -71,26 +62,36 @@ function CreateValidator<Type extends TSchema>(
 ): (
 	value: unknown,
 ) =>
-	| StandardSchemaV1.SuccessResult<StaticDecode<Type>>
+	| StandardSchemaV1.SuccessResult<StaticEncode<Type>>
 	| StandardSchemaV1.FailureResult {
 	return (
 		value: unknown,
 	):
-		| StandardSchemaV1.SuccessResult<StaticDecode<Type>>
+		| StandardSchemaV1.SuccessResult<StaticEncode<Type>>
 		| StandardSchemaV1.FailureResult => {
 		try {
-			return { value: Value.Encode(schema, value) };
+			return { value: Value.Encode(schema, references, value) };
 		} catch (error) {
-			return { issues: CreateIssues(schema, value, error) };
+			return { issues: CreateIssues(error) };
 		}
 	};
 }
-// ------------------------------------------------------------------
-// StandardSchema
-// ------------------------------------------------------------------
-/** Augments a TypeBox type with the `~standard` validation interface. */
-/** Augments a TypeBox type with the `~standard` validation interface. */
-export function StandardSchema<Type extends TSchema>(
+export function StandardEncodeSchema<Type extends TSchema>(
+	schema: Type,
+	references: TSchema[] = [],
+): Type & StandardSchemaV1<StaticDecode<Type>, StaticEncode<Type>> {
+	const standard = {
+		version: 1,
+		vendor: "TypeBox",
+		validate: CreateValidator(schema, references),
+	};
+	return Object.defineProperty(CloneType(schema), "~standard", {
+		enumerable: false,
+		value: standard,
+	}) as never;
+}
+
+export function StandardDecodeSchema<Type extends TSchema>(
 	schema: Type,
 	references: TSchema[] = [],
 ): Type & StandardSchemaV1<StaticEncode<Type>, StaticDecode<Type>> {

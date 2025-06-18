@@ -1,30 +1,30 @@
 import { t } from "elysia";
 import { IsoDate } from "./isoDate";
-import { StandardSchema } from "./standard";
+import { StandardDecodeSchema, StandardEncodeSchema } from "./standard";
 
-const Article = t.Object({
-  title: t.String(),
-  slug: t.String(),
-  description: t.String(),
-  body: t.String(),
-  createdAt: IsoDate,
-  updatedAt: IsoDate,
+export const Article = t.Object({
+	title: t.String(),
+	slug: t.String(),
+	description: t.String(),
+	body: t.String(),
+	createdAt: IsoDate,
+	updatedAt: IsoDate,
 });
 
-export const SingleArticleResponse = StandardSchema(
-  t.Object({
-    article: Article,
-  })
+export const SingleArticleResponse = StandardEncodeSchema(
+	t.Object({
+		article: Article,
+	}),
 );
 
-export const CreateUpdateArticleRequestBody = StandardSchema(
-  t.Object({
-    article: t.Pick(Article, ["title", "description", "body"]),
-  })
+export const CreateUpdateArticleRequestBody = StandardDecodeSchema(
+	t.Object({
+		article: t.Pick(Article, ["title", "description", "body"]),
+	}),
 );
 
-export const MultipleArticlesResponse = StandardSchema(
-  t.Object({
-    articles: t.Array(Article),
-  })
+export const MultipleArticlesResponse = StandardEncodeSchema(
+	t.Object({
+		articles: t.Array(Article),
+	}),
 );

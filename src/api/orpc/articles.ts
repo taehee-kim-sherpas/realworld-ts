@@ -1,4 +1,4 @@
-import { os, ORPCError } from "@orpc/server";
+import { os } from "@orpc/server";
 import * as t from "@sinclair/typebox";
 import { createArticle, updateArticle } from "../../domain/articles/Article";
 import {
@@ -6,8 +6,9 @@ import {
 	MultipleArticlesResponse,
 	SingleArticleResponse,
 } from "../../schema/typebox/articles";
-import { StandardSchema } from "../../schema/typebox/standard";
+import { StandardDecodeSchema } from "../../schema/typebox/standard";
 import type { AppContext } from "../context";
+import { AlreadyExistError, NotExistError } from "../../domain/errors";
 
 export const createArticlesRoutes = (ctx: AppContext) => ({
 	list: os
@@ -22,24 +23,15 @@ export const createArticlesRoutes = (ctx: AppContext) => ({
 		.route({
 			method: "POST",
 			path: "/api/articles",
-			inputStructure: "detailed",
 		})
-		.input(
-			StandardSchema(
-				t.Object({
-					body: CreateUpdateArticleRequestBody,
-				}),
-			),
-		)
+		.input(StandardDecodeSchema(CreateUpdateArticleRequestBody))
 		.output(SingleArticleResponse)
 		.handler(async (c) => {
-			const article = createArticle(c.input.body.article, ctx);
+			const article = createArticle(c.input.article, ctx);
 
 			await ctx.repo.article.saveBySlug(article.slug, (old) => {
 				if (old) {
-					throw new ORPCError("CONFLICT", {
-						message: `Article for article=${article.slug}`,
-					});
+					throw new AlreadyExistError("Article for article=${article.slug}");
 				}
 				return article;
 			});
@@ -48,15 +40,13 @@ export const createArticlesRoutes = (ctx: AppContext) => ({
 		}),
 	getBySlug: os
 		.route({ method: "GET", path: "/api/articles/{slug}" })
-		.input(StandardSchema(t.Object({ slug: t.String() })))
+		.input(StandardDecodeSchema(t.Object({ slug: t.String() })))
 		.output(SingleArticleResponse)
 		.handler(async (c) => {
 			const article = await ctx.repo.article.getBySlug(c.input.slug);
 
 			if (article === undefined) {
-				throw new ORPCError("NOT_FOUND", {
-					message: `Article for slug=${c.input.slug}`,
-				});
+				throw new NotExistError(`Article for slug=${c.input.slug}`);
 			}
 
 			return { article };
@@ -65,30 +55,27 @@ export const createArticlesRoutes = (ctx: AppContext) => ({
 		.route({
 			method: "PUT",
 			path: "/api/articles/{slug}",
-			inputStructure: "detailed",
 		})
 		.input(
-			StandardSchema(
-				t.Object({
-					params: t.Object({
+			StandardDecodeSchema(
+				t.Intersect([
+					CreateUpdateArticleRequestBody,
+					t.Object({
 						slug: t.String(),
 					}),
-					body: CreateUpdateArticleRequestBody,
-				}),
+				]),
 			),
 		)
 		.output(SingleArticleResponse)
 		.handler(async (c) => {
 			const result = await ctx.repo.article.saveBySlug(
-				c.input.params.slug,
+				c.input.slug,
 				(oldArticle) => {
 					if (oldArticle === undefined) {
-						throw new ORPCError("NOT_FOUND", {
-							message: `Article for slug=${c.input.params.slug}`,
-						});
+						throw new NotExistError(`Article for slug=${c.input.slug}`);
 					}
 
-					return updateArticle(oldArticle, c.input.body.article, ctx);
+					return updateArticle(oldArticle, c.input.article, ctx);
 				},
 			);
 
@@ -96,7 +83,7 @@ export const createArticlesRoutes = (ctx: AppContext) => ({
 		}),
 	delete: os
 		.route({ method: "DELETE", path: "/api/articles/{slug}" })
-		.input(StandardSchema(t.Object({ slug: t.String() })))
+		.input(StandardDecodeSchema(t.Object({ slug: t.String() })))
 		.handler(async (c) => {
 			await ctx.repo.article.deleteBySlug(c.input.slug);
 			return new Response("", { status: 204 });
