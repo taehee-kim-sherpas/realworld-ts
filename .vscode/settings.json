@@ -4,6 +4,7 @@
         "elysiajs",
         "Insertable",
         "kysely",
+        "orpc",
         "Pglite",
         "timestamptz",
         "typebox",

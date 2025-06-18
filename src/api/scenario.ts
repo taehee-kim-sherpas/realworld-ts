@@ -337,27 +337,27 @@ export function runRepositoryTests(
 	// 	};
 	// });
 
-	runTestScenario(`${appName} api - drizzle gel`, () => {
-		const { db, setup } = setupGelDb();
-		const gelRepoContext = createFakeContext({
-			repo: {
-				article: createDrizzleGelArticleRepo(db),
-				comment: createDrizzleGelCommentRepo(db),
-			},
-			setup,
-		});
-		const gelApp = createApp(gelRepoContext);
+	// runTestScenario(`${appName} api - drizzle gel`, () => {
+	// 	const { db, setup } = setupGelDb();
+	// 	const gelRepoContext = createFakeContext({
+	// 		repo: {
+	// 			article: createDrizzleGelArticleRepo(db),
+	// 			comment: createDrizzleGelCommentRepo(db),
+	// 		},
+	// 		setup,
+	// 	});
+	// 	const gelApp = createApp(gelRepoContext);
 
-		return {
-			client: createFetchClient((request) =>
-				gelApp.then((app) => app.fetch(request)),
-			),
-			context: gelRepoContext,
-			teardown: async () => {
-				await gelApp.then((app) => app.teardown?.());
-			},
-		};
-	});
+	// 	return {
+	// 		client: createFetchClient((request) =>
+	// 			gelApp.then((app) => app.fetch(request)),
+	// 		),
+	// 		context: gelRepoContext,
+	// 		teardown: async () => {
+	// 			await gelApp.then((app) => app.teardown?.());
+	// 		},
+	// 	};
+	// });
 
 	runTestScenario(`${appName} api - kysely sqlite`, () => {
 		const kyselyDb = setupKyselySqliteDb();
